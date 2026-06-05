@@ -1,7 +1,7 @@
 {
   "homepage": "./",
   "name": "floun",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "dependencies": {
     "file-saver": "^2.0.5",
@@ -14,7 +14,13 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "audit:prod": "npm audit --omit=dev",
+    "check:worker": "node --check build/background.js",
+    "release:check": "npm run test && npm run build && npm run audit:prod && npm run typecheck && npm run check:worker",
+    "fixture:server": "vite fixtures --host 127.0.0.1 --port 4174",
+    "package:extension": "npm run release:check && powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/package-extension.ps1"
   },
   "browserslist": {
     "production": [

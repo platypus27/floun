@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="floun-fixture" content="crypto-readiness">
+    <title>Floun Crypto Readiness Fixture</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: Arial, Helvetica, sans-serif;
+        line-height: 1.5;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px;
+        background: #f7f7f8;
+        color: #222222;
+      }
+
+      main {
+        max-width: 880px;
+        margin: 0 auto;
+      }
+
+      section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #d8d8dc;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      code {
+        display: block;
+        overflow-wrap: anywhere;
+        padding: 8px 0;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #161616;
+          color: #eeeeee;
+        }
+
+        section {
+          border-color: #3a3a3d;
+          background: #202024;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Floun Crypto Readiness Fixture</h1>
+      <p>This local page exposes deterministic browser-visible signals for release-candidate QA.</p>
+
+      <section>
+        <h2>Weak Crypto Signals</h2>
+        <code>MD5(input)</code>
+        <code>SHA1(input)</code>
+        <code>DES.encrypt(payload)</code>
+        <code>Triple DES.encrypt(payload)</code>
+        <code>RC4.encrypt(payload)</code>
+      </section>
+
+      <section>
+        <h2>Migration Review Signals</h2>
+        <code>RSA.generateKeyPair(2048)</code>
+        <code>ECDSA certificate signature inventory</code>
+      </section>
+
+      <section>
+        <h2>Post-Quantum Readiness Signals</h2>
+        <code>ML-KEM-768</code>
+        <code>Kyber768</code>
+        <code>ML-DSA-65</code>
+        <code>Dilithium3</code>
+        <code>SLH-DSA-SHA2-128f</code>
+        <code>SPHINCS+</code>
+      </section>
+
+      <section>
+        <h2>Token Heuristic Signals</h2>
+        <code id="token-status">Preparing local token candidates...</code>
+      </section>
+    </main>
+
+    <script>
+      const weakCryptoSignals = [
+        "MD5(input)",
+        "SHA1(input)",
+        "DES.encrypt(payload)",
+        "Triple DES.encrypt(payload)",
+        "RC4.encrypt(payload)"
+      ];
+
+      const reviewSignals = [
+        "RSA.generateKeyPair(2048)",
+        "ECDSA sha256WithRSAEncryption"
+      ];
+
+      const readinessSignals = [
+        "ML-KEM-768",
+        "Kyber768",
+        "ML-DSA-65",
+        "Dilithium3",
+        "SLH-DSA-SHA2-128f",
+        "SPHINCS+"
+      ];
+
+      const tokenCandidates = {
+        localOpaqueToken: "0123456789abcdef0123456789abcdef",
+        localBearerToken: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL",
+        sessionJwtToken: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmbG91biJ9.c2lnbmF0dXJl",
+        sessionVersionedToken: "v1_flounreleasecandidate20260605",
+        cookieQueueToken: "QABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890=="
+      };
+
+      localStorage.setItem("floun-local-token", tokenCandidates.localOpaqueToken);
+      localStorage.setItem("floun-bearer-token", tokenCandidates.localBearerToken);
+      sessionStorage.setItem("floun-session-jwt", tokenCandidates.sessionJwtToken);
+      sessionStorage.setItem("floun-versioned-token", tokenCandidates.sessionVersionedToken);
+      document.cookie = "floun_queue_token=" + tokenCandidates.cookieQueueToken + "; path=/; SameSite=Lax";
+
+      window.flounCryptoReadinessFixture = {
+        weakCryptoSignals,
+        reviewSignals,
+        readinessSignals
+      };
+
+      document.getElementById("token-status").textContent = "Token candidates are available in cookie, localStorage, and sessionStorage.";
+    </script>
+  </body>
+</html>

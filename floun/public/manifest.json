@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Floun",
-  "version": "2.0",
+  "version": "2.0.0",
   "description": "Lightweight crypto-readiness and migration signal scanner",
   "permissions": ["activeTab", "scripting"],
   "host_permissions": [

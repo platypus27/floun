@@ -18,12 +18,19 @@ The extension app lives in `floun/`.
 ```bash
 cd floun
 npm install
-npm test
-npm run build
-npm audit --omit=dev
+npm run release:check
 ```
 
 The built extension is emitted to `floun/build/`.
+
+To package a local release candidate:
+
+```bash
+cd floun
+npm run package:extension
+```
+
+The zip artifact is emitted to `floun/release/floun-2.0.0.zip`.
 
 ## Optional Gemini Report Text
 
@@ -41,6 +48,14 @@ Do not commit `.env.local` or API key files.
 2. Open Chrome and go to `chrome://extensions/`.
 3. Enable Developer Mode.
 4. Click Load unpacked and select `floun/build/`.
+
+For release QA, serve the local fixture from `floun/`:
+
+```bash
+npm run fixture:server
+```
+
+Then scan `http://127.0.0.1:4174/crypto-readiness.html`.
 
 ## Privacy
 

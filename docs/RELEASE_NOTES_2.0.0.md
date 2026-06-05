@@ -1,0 +1,59 @@
+# Floun 2.0.0 Release Notes
+
+Status: prepared locally; not pushed or tagged.
+
+## Release Theme
+
+Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens trust, accuracy, scan resilience, and release repeatability without expanding into general web vulnerability scanning.
+
+## Highlights
+
+- Minimized Chrome extension scope by removing the always-on content script, removing broad host permissions, and keeping active scans routed through direct popup-to-background messaging.
+- Added `Review` severity, richer crypto rule metadata, and adapter status warnings so classical or unclassified cryptography is treated as migration inventory rather than a confirmed vulnerability.
+- Moved the background worker into typed TypeScript modules with dedicated page, TLS, and certificate adapters.
+- Added explainable findings in the popup and reports, including rationale, limitations, recommendations, confidence, standard status, references, and redacted evidence.
+- Kept PDF generation lazy-loaded and report output redacted.
+- Added repeatable release-candidate scripts, a Windows-first PowerShell packager, and an HTTP-served QA fixture.
+
+## Verification Commands
+
+Run from `floun/`:
+
+```bash
+npm run release:check
+npm run package:extension
+npm test
+npm run build
+npm audit --omit=dev
+npx tsc --noEmit
+node --check build/background.js
+```
+
+Run from the repository root:
+
+```bash
+git diff --check
+```
+
+The package artifact is written to `floun/release/floun-2.0.0.zip`.
+
+## Manual QA Targets
+
+- Load `floun/build/` in Chrome extensions.
+- Serve the fixture with `npm run fixture:server` and scan `http://127.0.0.1:4174/crypto-readiness.html`.
+- Scan a known HTTPS site and confirm TLS/certificate adapter status is visible.
+- Scan an HTTP site and confirm certificate lookup is reported as unavailable.
+- Attempt unsupported pages and confirm graceful errors.
+- Generate a PDF report and confirm raw tokens are absent.
+
+## Scope Boundaries
+
+- No new Chrome permissions.
+- No new scan domains.
+- No CSP, cookie-flag, mixed-content, dependency, endpoint, or general vulnerability scanning.
+- Findings remain crypto-readiness and migration signals, not a definitive vulnerability assessment.
+- The local fixture is HTTP-served QA content; `file://` support is intentionally not reintroduced.
+
+## Publication Status
+
+This release candidate is push-ready after manual QA, but it has not been pushed, tagged, or published.

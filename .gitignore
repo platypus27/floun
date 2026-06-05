@@ -5,6 +5,11 @@ node_modules/
 dist/
 build/
 
+# Release artifacts
+release/
+floun/release/
+*.zip
+
 # Logs
 logs/
 *.log

@@ -6,11 +6,26 @@ Floun is a lightweight Chrome extension popup for crypto-readiness and migration
 
 ```bash
 npm install
-npm test
-npm run build
+npm run release:check
 ```
 
 The production extension is emitted to `build/`.
+
+## Release Candidate Packaging
+
+```bash
+npm run package:extension
+```
+
+The package command runs the full release check, then writes `release/floun-2.0.0.zip`.
+
+For manual QA, serve the HTTP fixture:
+
+```bash
+npm run fixture:server
+```
+
+Then scan `http://127.0.0.1:4174/crypto-readiness.html`.
 
 ## Optional Gemini Report Text
 
@@ -44,8 +59,9 @@ The baseline checks are:
 ```bash
 npm test
 npm run build
-npm audit --omit=dev
-node --check build/background.js
+npm run audit:prod
+npm run typecheck
+npm run check:worker
 ```
 
 The project uses Vite for the popup build and Vitest for unit tests. Production dependencies currently audit clean with `npm audit --omit=dev`.
