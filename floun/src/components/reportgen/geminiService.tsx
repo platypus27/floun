@@ -1,4 +1,4 @@
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY?.trim() || "";
+const API_KEY = (import.meta.env.REACT_APP_GEMINI_API_KEY || "").trim();
 const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 interface GeminiResponse {
@@ -40,4 +40,3 @@ export async function generateChatMessage(prompt: string): Promise<string> {
   const data = await response.json() as GeminiResponse;
   return data.candidates?.[0]?.content?.parts?.[0]?.text || "No content generated.";
 }
-

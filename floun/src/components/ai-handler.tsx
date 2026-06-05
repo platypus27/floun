@@ -1,11 +1,11 @@
 import { AnalysisFinding } from "./analysisFinding";
 import { generateChatMessage, hasGeminiApiKey } from "./reportgen/geminiService";
-import { logoBase64 } from "./reportgen/logoBase64";
 import {
   FindingGroups,
   ReportSections,
   buildFindingsText,
   buildReportContent,
+  countFindingsBySeverity,
   countVulnerableFindings,
   fallbackSections,
   flattenFindingGroups,
@@ -14,10 +14,12 @@ import {
 
 async function buildReportSections(groups: FindingGroups): Promise<ReportSections> {
   const findingsText = buildFindingsText(groups);
-  const vulnerableCount = countVulnerableFindings(flattenFindingGroups(groups));
+  const allFindings = flattenFindingGroups(groups);
+  const vulnerableCount = countVulnerableFindings(allFindings);
+  const reviewCount = countFindingsBySeverity(allFindings, "Review");
 
   if (!hasGeminiApiKey()) {
-    return fallbackSections(findingsText, vulnerableCount);
+    return fallbackSections(findingsText, vulnerableCount, reviewCount);
   }
 
   const prompts = reportSectionPrompts(findingsText);
@@ -68,7 +70,6 @@ export async function createReport(
   await generatePDFReport({
     title: "Quantum Safe Cryptography Report",
     subtitle: "Identifying and Mitigating Cryptographic Vulnerabilities",
-    logoBase64,
     date: new Date().toLocaleDateString(),
     confidentialityNotice: "Confidential - For Internal Use Only",
   }, buildReportContent(groups, sections));

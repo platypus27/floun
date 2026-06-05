@@ -1,6 +1,5 @@
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
-import { logoBase64 } from "./logoBase64";
 import { ReportContent } from "./reportDocument";
 
 interface CoverDetails {
@@ -49,7 +48,11 @@ export async function generatePDFReport(
   });
 
   const pdfBytes = await pdfDoc.save();
-  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  const pdfBlobPart = pdfBytes.buffer.slice(
+    pdfBytes.byteOffset,
+    pdfBytes.byteOffset + pdfBytes.byteLength
+  ) as ArrayBuffer;
+  const blob = new Blob([pdfBlobPart], { type: "application/pdf" });
   saveAs(blob, "Quantum_Safe_Cryptography_Report.pdf");
 }
 
@@ -59,7 +62,7 @@ async function drawCoverPage(
   coverDetails: CoverDetails,
   fonts: PdfFonts
 ): Promise<void> {
-  const rawLogoData = coverDetails.logoBase64 || logoBase64;
+  const rawLogoData = coverDetails.logoBase64 || await loadDefaultLogoBase64();
   const logoImage = await embedLogo(pdfDoc, rawLogoData);
 
   if (logoImage) {
@@ -123,7 +126,37 @@ async function drawCoverPage(
   });
 }
 
-async function embedLogo(pdfDoc: PDFDocument, rawLogoData: string) {
+async function loadDefaultLogoBase64(): Promise<string | null> {
+  try {
+    const response = await fetch("icons/floun.png");
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return blobToDataUrl(await response.blob());
+  } catch {
+    return null;
+  }
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      resolve(typeof reader.result === "string" ? reader.result : "");
+    };
+    reader.onerror = () => reject(reader.error || new Error("Logo conversion failed."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function embedLogo(pdfDoc: PDFDocument, rawLogoData: string | null) {
+  if (!rawLogoData) {
+    return null;
+  }
+
   if (rawLogoData.startsWith("data:image/png;base64,")) {
     return pdfDoc.embedPng(rawLogoData.split(",")[1]);
   }
