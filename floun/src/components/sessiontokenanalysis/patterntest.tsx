@@ -17,7 +17,7 @@ const PatternTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
         // Convert `token` to an array if it's a string
         const tokenArray: string[] = Array.isArray(token) ? token : [token];
 
-        if (!tokenArray || tokenArray.length === 0 || tokenArray[0] === "No token found") {
+        if (tokenArray.length === 0 || tokenArray[0] === "No token found" || tokenArray[0] === "No tokens found") {
             return { passed: false, message: "No tokens found", details: "Missing" };
         }
 
@@ -35,7 +35,7 @@ const PatternTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
             if (tokenParts.length === 3) {
                 try {
                     singleToken = atob(tokenParts[1].replace(/_/g, "/").replace(/-/g, "+")); // Decode Base64 safely
-                } catch (error) {
+                } catch {
                     return { passed: false, message: "Failed to decode JWT payload.", details: "Decoding Error" };
                 }
             }
@@ -55,7 +55,7 @@ const PatternTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
 
     // Improved check for sequential patterns
     function checkForSequentialPatterns(token: string): TestResult | null {
-        const sequenceLength = 3; // Adjust if needed
+        const sequenceLength = 5;
 
         for (let i = 0; i <= token.length - sequenceLength; i++) {
             const sequence = token.substring(i, i + sequenceLength);

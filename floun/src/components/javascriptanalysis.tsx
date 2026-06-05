@@ -1,29 +1,50 @@
-import { getEncryptionPatterns } from './cryptographyAnalysisEngine';
+import { AnalysisFinding } from './analysisFinding';
+import { getJavaScriptCryptoRules } from './cryptoRules';
 
-export const analyzeCryptoInJavascript = (scripts: any[]): string[] => {
-  const vulnerabilities: string[] = [];
-  const encryptionPatterns = getEncryptionPatterns();
+interface ScriptScanResult {
+  type?: string;
+  src?: string;
+  content?: string;
+}
 
-  // For each script, search for encryption methods and include a code snippet sample.
-  scripts.forEach((script) => {
+const compactSnippet = (content: string, index: number, matchLength: number): string => {
+  const snippetStart = Math.max(index - 30, 0);
+  const snippetEnd = Math.min(index + matchLength + 30, content.length);
+  return content.substring(snippetStart, snippetEnd).replace(/\s+/g, ' ').trim();
+};
+
+export const analyzeCryptoInJavascript = (scripts: unknown): AnalysisFinding[] => {
+  const scriptList = Array.isArray(scripts) ? scripts as ScriptScanResult[] : [];
+  const findings: AnalysisFinding[] = [];
+  const rules = getJavaScriptCryptoRules();
+
+  scriptList.forEach((script) => {
     const content = script.content || '';
-    encryptionPatterns.forEach((pattern) => {
-      // Reset pointer in case regex is global
-      pattern.regex.lastIndex = 0;
+    rules.forEach((rule) => {
+      rule.regex.lastIndex = 0;
       let match;
-      while ((match = pattern.regex.exec(content)) !== null) {
-        const snippetStart = Math.max(match.index - 30, 0);
-        const snippetEnd = Math.min(match.index + match[0].length + 30, content.length);
-        const snippet = content.substring(snippetStart, snippetEnd).replace(/\n/g, ' ');
-        vulnerabilities.push(
-          `Found ${pattern.name} [${pattern.safety}] in ${script.type || 'unknown'} script (${script.src || 'inline'}).\nSample code: ${snippet}`
-        );
+      while ((match = rule.regex.exec(content)) !== null) {
+        findings.push({
+          ruleId: rule.id,
+          source: 'JavaScript',
+          severity: rule.severity,
+          confidence: rule.confidence,
+          title: `Found ${rule.name}`,
+          location: `${script.type || 'unknown'} script (${script.src || 'inline'})`,
+          evidence: compactSnippet(content, match.index, match[0].length),
+          recommendation: rule.recommendation,
+        });
       }
     });
   });
 
-
-  return vulnerabilities.length > 0
-    ? vulnerabilities
-    : ['No cryptographic encryption methods found in the Javascript'];
+  return findings.length > 0
+    ? findings
+    : [{
+      source: 'JavaScript',
+      severity: 'Info',
+      title: 'No cryptographic methods found',
+      location: 'JavaScript',
+      details: 'No configured cryptographic patterns matched the scanned scripts.',
+    }];
 };

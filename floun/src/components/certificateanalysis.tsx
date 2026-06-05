@@ -1,15 +1,48 @@
-// certificate contents will be sent from autoscan getCertificate(), just have to analyse the certificate
-// find the cryptographic algorithm used in the certificate and determine if it is quantum resistant
-// semi easy i guess shouldnt be hard at all
+import { AnalysisFinding } from './analysisFinding';
+import { classifyCertificateSignature } from './cryptoRules';
 
-import { CERTIFICATE_SIGNATURES } from './cryptographyAnalysisEngine';
+interface CertificateScanResult {
+  result?: {
+    cert_alg?: unknown;
+  };
+  cert_alg?: unknown;
+}
 
-export const analyzeCertificate = (certificate: any): string[] | null => {
-  const certificate_algo = certificate["result"]["cert_alg"];
-
-  if (CERTIFICATE_SIGNATURES['safe'].includes(certificate_algo)) {
-    return [`Found ${certificate_algo} [Safe] in certificate`]
-  } else {
-    return [`Found ${certificate_algo} [Vulnerable] in certificate`]
+const getCertificateAlgorithm = (certificate: unknown): string | null => {
+  if (!certificate || typeof certificate !== "object") {
+    return null;
   }
+
+  const certificateData = certificate as CertificateScanResult;
+  const algorithm = certificateData.result?.cert_alg ?? certificateData.cert_alg;
+
+  return typeof algorithm === "string" && algorithm.trim().length > 0
+    ? algorithm
+    : null;
+};
+
+export const analyzeCertificate = (certificate: unknown): AnalysisFinding[] => {
+  const certificateAlgorithm = getCertificateAlgorithm(certificate);
+
+  if (!certificateAlgorithm) {
+    return [{
+      source: "Certificate",
+      severity: "Info",
+      title: "No certificate signature algorithm found",
+      location: "Certificate",
+      details: "The certificate scan did not return a cert_alg value.",
+    }];
+  }
+
+  const rule = classifyCertificateSignature(certificateAlgorithm);
+
+  return [{
+    ruleId: rule.id,
+    source: "Certificate",
+    severity: rule.severity,
+    confidence: rule.confidence,
+    title: `Certificate uses ${certificateAlgorithm}`,
+    location: "Certificate",
+    recommendation: rule.recommendation,
+  }];
 };

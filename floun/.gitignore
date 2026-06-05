@@ -35,6 +35,10 @@ jspm_packages/
 
 # dotenv environment variables file
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Mac system files
 .DS_Store
@@ -59,4 +63,5 @@ coverage/
 # shodan key
 src/shodankey.tsx
 
+src/components/reportgen/key.ts
 src/components/reportgen/key.tsx

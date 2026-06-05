@@ -21,7 +21,7 @@ const EntropyTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
   const runTest = (): TestResult => {
     const token = tokenData.token;
 
-    if (!token || token == "No tokens found") {
+    if (!token || token === "No tokens found") {
       return {
         passed: false,
         message: "No tokens found"

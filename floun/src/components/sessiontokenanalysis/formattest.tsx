@@ -21,6 +21,10 @@ interface TestResult {
     vulnerabilities?: string[];
 }
 
+const getErrorMessage = (error: unknown): string => (
+    error instanceof Error ? error.message : "Unknown parsing error"
+);
+
 const FormatTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
     const runTest = (): TestResult => {
         const { token } = tokenData;
@@ -37,7 +41,7 @@ const FormatTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
             }
             try {
                 return atob(str);
-            } catch (error) {
+            } catch {
                 return null;
             }
         };
@@ -90,9 +94,9 @@ const FormatTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
                     if (!parsedHeader.kid) {
                         vulnerabilities.push("JWT does not have a 'kid' claim, which may be insecure for key rotation.");
                     }
-                } catch (headerParseError: any) {
+                } catch (headerParseError: unknown) {
                     jwtAlgorithm = undefined;
-                     vulnerabilities.push(`Error parsing JWT header: ${headerParseError.message}`);
+                     vulnerabilities.push(`Error parsing JWT header: ${getErrorMessage(headerParseError)}`);
                 }
 
                 try {
@@ -108,8 +112,8 @@ const FormatTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
                             vulnerabilities.push("JWT is expired.");
                         }
                     }
-                } catch (payloadParseError: any) {
-                    vulnerabilities.push(`Error parsing JWT payload: ${payloadParseError.message}`);
+                } catch (payloadParseError: unknown) {
+                    vulnerabilities.push(`Error parsing JWT payload: ${getErrorMessage(payloadParseError)}`);
                 }
 
                 return {
