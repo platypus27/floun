@@ -36,9 +36,9 @@ export function reportSectionPrompts(findingsText: string): Record<keyof ReportS
   return {
     introduction: "Write a concise introduction for a quantum-safe cryptography report for web security. Cover purpose, scope, and audience.",
     executiveSummary: `Write a concise executive summary based on these redacted findings. Do not invent unobserved findings.\n${findingsText}`,
-    vulnerabilityAnalysis: `Analyze the quantum cryptographic vulnerabilities in these redacted findings. Do not output secrets, tokens, hashes, or certificates.\n${findingsText}`,
+    vulnerabilityAnalysis: `Analyze these crypto-readiness findings. Distinguish review items from confirmed weak or deprecated findings. Do not output secrets, tokens, hashes, or certificates.\n${findingsText}`,
     riskAssessment: `Write a risk assessment based on these redacted findings. Focus on business and technical impact.\n${findingsText}`,
-    recommendations: `Provide short-term and long-term recommendations for mitigating these findings.\n${findingsText}`,
+    recommendations: `Provide short-term and long-term recommendations for validating and remediating these findings.\n${findingsText}`,
     nextStep: `Write practical next steps for implementing quantum-safe cryptography based on these findings.\n${findingsText}`,
     conclusion: `Write a concise conclusion summarizing the key findings and recommendations.\n${findingsText}`,
   };
@@ -88,7 +88,7 @@ export function fallbackSections(
     introduction: "This report summarizes browser-extension scan results for quantum-safe web cryptography readiness.",
     executiveSummary: `${vulnerabilityLine}${reviewLine} Findings were redacted before report generation to avoid exposing sensitive values.`,
     vulnerabilityAnalysis: findingsText,
-    riskAssessment: "Classical asymmetric cryptography and weak legacy algorithms may create migration risk as quantum capabilities mature.",
+    riskAssessment: "Review findings indicate migration-planning signals, while deprecated algorithms indicate higher-priority remediation risk.",
     recommendations: "Prioritize TLS modernization, remove legacy cryptographic primitives, and plan migration toward standardized post-quantum algorithms.",
     nextStep: "Validate findings with infrastructure owners, confirm supported cipher suites, and create a staged remediation plan.",
     conclusion: "The scan provides a starting point for quantum-safe cryptography planning and should be paired with deeper infrastructure review.",

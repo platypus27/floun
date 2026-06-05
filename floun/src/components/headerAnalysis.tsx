@@ -82,7 +82,11 @@ export const HeaderSecurityCheck = (jsonData: unknown): AnalysisFinding[] => {
               confidence: rule.confidence,
               title: `TLS ${tlsVersion} reports ${rule.name} ${cipher.name}`,
               location: "SSL Header",
-              details: rule.rationale,
+              rationale: rule.rationale,
+              limitations: rule.limitations,
+              references: rule.references,
+              standardStatus: rule.standardStatus,
+              updatedAt: rule.updatedAt,
               recommendation: rule.recommendation,
             });
           } else {
@@ -101,7 +105,11 @@ export const HeaderSecurityCheck = (jsonData: unknown): AnalysisFinding[] => {
         confidence: rule.confidence,
         title: `TLS ${tlsVersion} cipher needs migration review: ${cipher}`,
         location: "SSL Header",
-        details: rule.rationale,
+        rationale: rule.rationale,
+        limitations: rule.limitations,
+        references: rule.references,
+        standardStatus: rule.standardStatus,
+        updatedAt: rule.updatedAt,
         recommendation: rule.recommendation,
       });
     });

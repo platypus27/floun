@@ -11,6 +11,9 @@ interface TokenTestResult {
 }
 
 const missingTokenValues = new Set(["No tokens found", "No token found"]);
+const tokenHeuristicRationale = "Browser-visible token shape, entropy, repetition, and format checks can highlight suspicious session-token signals.";
+const tokenHeuristicLimitations = "These browser-visible checks only inspect token values available to the extension; they do not validate server-side session storage, rotation, revocation, cookie flags, or authentication policy.";
+const tokenHeuristicRecommendation = "Validate token generation and session controls with the application owner, especially for tokens that fail format, entropy, pattern, or frequency checks.";
 
 const normalizeTokenInput = (tokens: unknown): string[] => {
   if (!Array.isArray(tokens)) {
@@ -79,6 +82,10 @@ export const analyzeTokens = (tokens: unknown): AnalysisFinding[] => {
           patternTestResult,
           frequencyTestResult,
         ]),
+        standardStatus: "heuristic",
+        rationale: tokenHeuristicRationale,
+        limitations: tokenHeuristicLimitations,
+        recommendation: "Keep validating token generation, rotation, storage flags, and server-side session controls outside this browser-visible heuristic.",
         sensitive: true,
       });
     } else {
@@ -94,6 +101,10 @@ export const analyzeTokens = (tokens: unknown): AnalysisFinding[] => {
           patternTestResult,
           frequencyTestResult,
         ]),
+        standardStatus: "heuristic",
+        rationale: tokenHeuristicRationale,
+        limitations: tokenHeuristicLimitations,
+        recommendation: tokenHeuristicRecommendation,
         sensitive: true,
       });
     }

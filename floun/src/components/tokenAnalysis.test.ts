@@ -14,8 +14,10 @@ test("redacts token evidence in token findings", () => {
     source: "Tokens",
     severity: "Vulnerable",
     evidence: "[redacted token, 3 characters]",
+    standardStatus: "heuristic",
     sensitive: true,
   });
+  expect(findings[0].limitations).toContain("browser-visible");
+  expect(findings[0].recommendation).toContain("Validate token generation");
   expect(findings[0].evidence).not.toContain("abc");
 });
-

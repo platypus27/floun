@@ -22,7 +22,7 @@ const bodyFontSize = 12;
 const sectionDefinitions: Array<[string, keyof ReportContent]> = [
   ["1. Introduction", "introduction"],
   ["2. Executive Summary", "executiveSummary"],
-  ["3. Vulnerability Analysis", "vulnerabilityAnalysis"],
+  ["3. Readiness Analysis", "vulnerabilityAnalysis"],
   ["4. Risk Assessment", "riskAssessment"],
   ["5. Recommendations", "recommendations"],
   ["6. Next Steps", "nextStep"],

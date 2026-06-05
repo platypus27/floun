@@ -2,6 +2,16 @@ export type FindingSeverity = "Safe" | "Review" | "Vulnerable" | "Info";
 
 export type FindingSource = "JavaScript" | "Tokens" | "SSL Header" | "Certificate";
 
+export type FindingStandardStatus =
+  | "standardized"
+  | "draft"
+  | "classical"
+  | "deprecated"
+  | "legacy-candidate"
+  | "unclassified"
+  | "heuristic"
+  | "not-applicable";
+
 export interface AnalysisFinding {
   ruleId?: string;
   source: FindingSource;
@@ -12,6 +22,11 @@ export interface AnalysisFinding {
   evidence?: string;
   details?: string;
   recommendation?: string;
+  standardStatus?: FindingStandardStatus;
+  rationale?: string;
+  limitations?: string;
+  references?: string[];
+  updatedAt?: string;
   sensitive?: boolean;
 }
 
@@ -76,8 +91,26 @@ export function formatFindingsForReport(findings: AnalysisFinding[]): string {
   }
 
   return findings
-    .map(finding => formatFinding(finding, { includeEvidence: false }))
+    .map(formatFindingForReport)
     .join("\n");
+}
+
+export function formatFindingForReport(finding: AnalysisFinding): string {
+  const location = finding.location ? ` in ${finding.location}` : "";
+  const lines = [
+    `${finding.title} [${finding.severity}]${location}.`,
+    finding.ruleId ? `Rule ID: ${finding.ruleId}` : "",
+    finding.confidence ? `Confidence: ${finding.confidence}` : "",
+    finding.standardStatus ? `Standard status: ${finding.standardStatus}` : "",
+    finding.rationale ? `Rationale: ${finding.rationale}` : "",
+    finding.details ? `Details: ${finding.details}` : "",
+    finding.limitations ? `Limitations: ${finding.limitations}` : "",
+    finding.recommendation ? `Recommendation: ${finding.recommendation}` : "",
+    finding.references?.length ? `References: ${finding.references.join(", ")}` : "",
+    finding.updatedAt ? `Updated: ${finding.updatedAt}` : "",
+  ].filter(Boolean);
+
+  return lines.join("\n");
 }
 
 export function redactValue(label: string, value: string): string {

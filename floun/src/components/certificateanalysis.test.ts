@@ -11,6 +11,7 @@ test("classifies classical certificate signatures as review findings", () => {
   expect(analyzeCertificate({ result: { cert_alg: "sha256WithRSAEncryption" } })[0]).toMatchObject({
     ruleId: "cert-classical-signature",
     severity: "Review",
+    standardStatus: "classical",
   });
 });
 
@@ -18,12 +19,19 @@ test("classifies deprecated certificate signatures as vulnerable", () => {
   expect(analyzeCertificate({ result: { cert_alg: "sha1WithRSAEncryption" } })[0]).toMatchObject({
     ruleId: "cert-deprecated-signature",
     severity: "Vulnerable",
+    standardStatus: "deprecated",
   });
 });
 
 test("classifies post-quantum certificate signatures as safe", () => {
-  expect(analyzeCertificate({ result: { cert_alg: "Dilithium3" } })[0]).toMatchObject({
+  const finding = analyzeCertificate({ result: { cert_alg: "Dilithium3" } })[0];
+
+  expect(finding).toMatchObject({
     ruleId: "cert-post-quantum-signature",
     severity: "Safe",
+    standardStatus: "standardized",
   });
+  expect(finding.rationale).toContain("ML-DSA");
+  expect(finding.limitations).toContain("client compatibility");
+  expect(finding.references?.length).toBeGreaterThan(0);
 });

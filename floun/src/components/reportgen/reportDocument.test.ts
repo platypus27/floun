@@ -25,6 +25,12 @@ const reviewFinding: AnalysisFinding = {
   confidence: "Medium",
   title: "TLS cipher needs migration review",
   location: "SSL Header",
+  standardStatus: "unclassified",
+  rationale: "Classical TLS suites are migration inventory signals.",
+  limitations: "TLS API responses may omit negotiated group details.",
+  recommendation: "Review negotiated TLS behavior manually.",
+  references: ["https://www.cisa.gov/resources-tools/resources/quantum-readiness-migration-post-quantum-cryptography"],
+  updatedAt: "2026-06-05",
 };
 
 const groups: FindingGroups = {
@@ -46,6 +52,10 @@ test("buildReportContent omits raw evidence from appendices", () => {
   const content = buildReportContent(groups, sections);
 
   expect(content.appendix).toContain("Tokens Results");
+  expect(content.appendix).toContain("Rationale: Classical TLS suites are migration inventory signals.");
+  expect(content.appendix).toContain("Limitations: TLS API responses may omit negotiated group details.");
+  expect(content.appendix).toContain("Recommendation: Review negotiated TLS behavior manually.");
+  expect(content.appendix).toContain("References: https://www.cisa.gov/resources-tools/resources/quantum-readiness-migration-post-quantum-cryptography");
   expect(content.appendix).not.toContain("secret-token-value");
   expect(content.reviewMethodsCount).toBe(1);
   expect(content.reviewMethodsBreakdown).toBe("JS: 0, Tokens: 0, Headers: 1, Certificates: 0");

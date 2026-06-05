@@ -21,7 +21,11 @@ test("classifies post-quantum TLS cipher suites as safe", () => {
     ruleId: "tls-ml-kem-family",
     severity: "Safe",
     confidence: "Medium",
+    standardStatus: "standardized",
   });
+  expect(findings[0].rationale).toContain("ML-KEM");
+  expect(findings[0].limitations).toContain("TLS naming");
+  expect(findings[0].references?.length).toBeGreaterThan(0);
 });
 
 test("classifies unlisted TLS cipher suites as review migration signals", () => {
@@ -37,5 +41,7 @@ test("classifies unlisted TLS cipher suites as review migration signals", () => 
   expect(findings[0]).toMatchObject({
     ruleId: "tls-classical-or-unclassified-cipher",
     severity: "Review",
+    standardStatus: "unclassified",
   });
+  expect(findings[0].rationale).toContain("migration inventory");
 });

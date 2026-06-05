@@ -15,6 +15,10 @@ import { ScanPayload, emptyScanMeta, scanActiveTab } from './extension/scanClien
 
 interface DashboardProps {
   resultsLoaded: boolean;
+  jsResults: AnalysisFinding[];
+  tokenResults: AnalysisFinding[];
+  headerResults: AnalysisFinding[];
+  certResults: AnalysisFinding[];
   jsSummary: AnalysisSummary;
   tokenSummary: AnalysisSummary;
   headerSummary: AnalysisSummary;
@@ -25,7 +29,64 @@ const getErrorMessage = (error: unknown): string => (
   error instanceof Error ? error.message : 'Unknown error'
 );
 
-const displayAnalysisSummary = (summary: AnalysisSummary, title: string) => (
+const formatStatus = (status: string): string => (
+  status
+    .split('-')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+);
+
+const FindingRows: React.FC<{ findings: AnalysisFinding[] }> = ({ findings }) => (
+  <div className="finding-list">
+    {findings.map((finding, index) => (
+      <details className={`finding-row severity-${finding.severity.toLowerCase()}`} key={`${finding.source}-${finding.ruleId || finding.title}-${index}`}>
+        <summary className="finding-summary">
+          <span className="finding-severity">{finding.severity}</span>
+          <span className="finding-title">{finding.title}</span>
+          {finding.confidence && (
+            <span className="finding-meta">{finding.confidence}</span>
+          )}
+          {finding.location && (
+            <span className="finding-meta">{finding.location}</span>
+          )}
+        </summary>
+        <div className="finding-detail">
+          {finding.rationale && (
+            <p><strong>Rationale:</strong> {finding.rationale}</p>
+          )}
+          {finding.details && (
+            <p><strong>Details:</strong> {finding.details}</p>
+          )}
+          {finding.limitations && (
+            <p><strong>Limitations:</strong> {finding.limitations}</p>
+          )}
+          {finding.recommendation && (
+            <p><strong>Recommendation:</strong> {finding.recommendation}</p>
+          )}
+          {finding.evidence && (
+            <p><strong>Evidence:</strong> {finding.evidence}</p>
+          )}
+          <div className="finding-attributes">
+            {finding.ruleId && <span>Rule: {finding.ruleId}</span>}
+            {finding.standardStatus && <span>Status: {formatStatus(finding.standardStatus)}</span>}
+            {finding.updatedAt && <span>Updated: {finding.updatedAt}</span>}
+          </div>
+          {finding.references && finding.references.length > 0 && (
+            <div className="finding-references">
+              {finding.references.map((reference, referenceIndex) => (
+                <a href={reference} target="_blank" rel="noreferrer" key={reference}>
+                  Reference {referenceIndex + 1}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </details>
+    ))}
+  </div>
+);
+
+const displayAnalysisSection = (summary: AnalysisSummary, findings: AnalysisFinding[], title: string) => (
   <div className="analysis-section">
     <p className="section-title">{title} Results</p>
     <p>Total found: {summary.total}</p>
@@ -33,31 +94,16 @@ const displayAnalysisSummary = (summary: AnalysisSummary, title: string) => (
     <p>Review: {summary.review}</p>
     <p>Vulnerable: {summary.vulnerable}</p>
     <p>Info: {summary.informational}</p>
-    {summary.review > 0 && (
-      <div className="review-details">
-        <p>Review Details:</p>
-        <ul>
-          {summary.reviewDetails.map((detail, index) => (
-            <li key={`${title}-review-${index}`}>{detail}</li>
-          ))}
-        </ul>
-      </div>
-    )}
-    {summary.vulnerable > 0 && (
-      <div className="vulnerable-details">
-        <p>Vulnerable Details:</p>
-        <ul>
-          {summary.vulnerableDetails.map((detail, index) => (
-            <li key={`${title}-${index}`}>{detail}</li>
-          ))}
-        </ul>
-      </div>
-    )}
+    <FindingRows findings={findings} />
   </div>
 );
 
 const Dashboard: React.FC<DashboardProps> = ({
   resultsLoaded,
+  jsResults,
+  tokenResults,
+  headerResults,
+  certResults,
   jsSummary,
   tokenSummary,
   headerSummary,
@@ -90,25 +136,25 @@ const Dashboard: React.FC<DashboardProps> = ({
       <details className="results-dropdown">
         <summary>JavaScript Results</summary>
         <div className="results-content">
-          {displayAnalysisSummary(jsSummary, 'JavaScript')}
+          {displayAnalysisSection(jsSummary, jsResults, 'JavaScript')}
         </div>
       </details>
       <details className="results-dropdown">
         <summary>Token Results</summary>
         <div className="results-content">
-          {displayAnalysisSummary(tokenSummary, 'Token')}
+          {displayAnalysisSection(tokenSummary, tokenResults, 'Token')}
         </div>
       </details>
       <details className="results-dropdown">
         <summary>Header Results</summary>
         <div className="results-content">
-          {displayAnalysisSummary(headerSummary, 'Header')}
+          {displayAnalysisSection(headerSummary, headerResults, 'Header')}
         </div>
       </details>
       <details className="results-dropdown">
         <summary>Certificate Results</summary>
         <div className="results-content">
-          {displayAnalysisSummary(certSummary, 'Certificate')}
+          {displayAnalysisSection(certSummary, certResults, 'Certificate')}
         </div>
       </details>
     </div>
@@ -206,6 +252,10 @@ const App: React.FC = () => {
           )}
           <Dashboard
             resultsLoaded={resultsLoaded}
+            jsResults={jsResults}
+            tokenResults={tokenResults}
+            headerResults={headerResults}
+            certResults={certResults}
             jsSummary={jsSummary}
             tokenSummary={tokenSummary}
             headerSummary={headerSummary}

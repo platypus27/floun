@@ -32,7 +32,11 @@ export const analyzeCryptoInJavascript = (scripts: unknown): AnalysisFinding[] =
           title: `Found ${rule.name}`,
           location: `${script.type || 'unknown'} script (${script.src || 'inline'})`,
           evidence: compactSnippet(content, match.index, match[0].length),
-          details: rule.rationale,
+          rationale: rule.rationale,
+          limitations: rule.limitations,
+          references: rule.references,
+          standardStatus: rule.standardStatus,
+          updatedAt: rule.updatedAt,
           recommendation: rule.recommendation,
         });
       }

@@ -122,6 +122,78 @@ ul {
   margin-bottom: 0.5rem;
 }
 
+.finding-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.finding-row {
+  border: 1px solid #d4e4e6;
+  border-left: 4px solid #016972;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.5rem;
+  background-color: #fff;
+}
+
+.finding-row.severity-vulnerable {
+  border-left-color: #b3261e;
+}
+
+.finding-row.severity-review {
+  border-left-color: #c28a00;
+}
+
+.finding-row.severity-safe {
+  border-left-color: #2d7a46;
+}
+
+.finding-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+.finding-severity {
+  font-weight: 800;
+}
+
+.finding-title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.finding-meta {
+  color: #475b5d;
+  font-size: 0.85rem;
+  grid-column: span 2;
+  overflow-wrap: anywhere;
+}
+
+.finding-detail {
+  margin-top: 0.5rem;
+  color: #243638;
+}
+
+.finding-detail p {
+  margin: 0 0 0.45rem;
+}
+
+.finding-attributes,
+.finding-references {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.finding-references a {
+  color: #016972;
+  font-weight: 700;
+}
+
 .scan-warnings {
   margin: 1rem;
   padding: 0.75rem;

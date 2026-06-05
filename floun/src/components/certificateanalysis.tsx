@@ -43,7 +43,11 @@ export const analyzeCertificate = (certificate: unknown): AnalysisFinding[] => {
     confidence: rule.confidence,
     title: `Certificate uses ${certificateAlgorithm}`,
     location: "Certificate",
-    details: rule.rationale,
+    rationale: rule.rationale,
+    limitations: rule.limitations,
+    references: rule.references,
+    standardStatus: rule.standardStatus,
+    updatedAt: rule.updatedAt,
     recommendation: rule.recommendation,
   }];
 };

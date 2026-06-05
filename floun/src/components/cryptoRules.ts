@@ -1,4 +1,4 @@
-import { FindingSeverity } from "./analysisFinding";
+import { FindingSeverity, FindingStandardStatus } from "./analysisFinding";
 
 export const CRYPTO_RULESET_VERSION = "2026.06";
 
@@ -6,13 +6,7 @@ export type RuleCategory = "javascript-pattern" | "tls-cipher-suite" | "certific
 
 export type RuleConfidence = "High" | "Medium" | "Low";
 
-export type RuleStandardStatus =
-  | "standardized"
-  | "draft"
-  | "classical"
-  | "deprecated"
-  | "legacy-candidate"
-  | "unclassified";
+export type RuleStandardStatus = Exclude<FindingStandardStatus, "heuristic" | "not-applicable">;
 
 interface BaseCryptoRule {
   id: string;
