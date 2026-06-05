@@ -48,7 +48,7 @@ Floun stores scan data locally in the browser extension flow. If Gemini report d
 
 ## Roadmap
 
-- Move the background service worker into TypeScript.
+- Add more adapter-level tests around the TypeScript background service worker.
 - Add deeper integration tests for Chrome message flows.
 - Expand the cryptography rule catalogue as standards and browser support evolve.
 

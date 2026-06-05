@@ -1,55 +1,25 @@
 /// <reference types="chrome"/>
 
-export const SCAN_WEBSITE_ACTION = "scanWebsite";
+import {
+  SCAN_WEBSITE_ACTION,
+  ScanPayload,
+  ScanResponse,
+  ScanTarget,
+  emptyScanMeta,
+} from "./scanTypes";
 
-export type ScanAdapterStatus = "complete" | "partial" | "unavailable";
+export {
+  SCAN_WEBSITE_ACTION,
+  emptyScanMeta,
+};
 
-export interface ScanAdapterMeta {
-  status: ScanAdapterStatus;
-  message?: string;
-}
-
-export interface ScanMeta {
-  page: ScanAdapterMeta;
-  tls: ScanAdapterMeta;
-  certificates: ScanAdapterMeta;
-  warnings: string[];
-}
-
-export interface ScanTarget {
-  tabId: number;
-  protocol: string;
-  hostname: string;
-  pageOrigin: string;
-  url: string;
-}
-
-export interface ScanPayload {
-  jsScripts?: unknown;
-  TLS?: unknown;
-  certificates?: unknown;
-  tokens?: unknown;
-  scanMeta: ScanMeta;
-}
-
-interface ScanSuccessResponse {
-  status: "success";
-  data: ScanPayload;
-}
-
-interface ScanErrorResponse {
-  status: "error";
-  message?: string;
-}
-
-type ScanResponse = ScanSuccessResponse | ScanErrorResponse | undefined;
-
-export const emptyScanMeta = (): ScanMeta => ({
-  page: { status: "unavailable", message: "Page scan has not run." },
-  tls: { status: "unavailable", message: "TLS scan has not run." },
-  certificates: { status: "unavailable", message: "Certificate scan has not run." },
-  warnings: [],
-});
+export type {
+  ScanAdapterMeta,
+  ScanAdapterStatus,
+  ScanMeta,
+  ScanPayload,
+  ScanTarget,
+} from "./scanTypes";
 
 export function buildScanTarget(url: string, tabId: number): ScanTarget {
   const parsedUrl = new URL(url);

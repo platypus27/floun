@@ -9,6 +9,19 @@ export default defineConfig({
     outDir: "build",
     emptyOutDir: true,
     chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      input: {
+        index: "index.html",
+        background: "src/extension/background/index.ts",
+      },
+      output: {
+        entryFileNames: ({ name }) => (
+          name === "background" ? "background.js" : "assets/[name]-[hash].js"
+        ),
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+    },
   },
   test: {
     environment: "jsdom",

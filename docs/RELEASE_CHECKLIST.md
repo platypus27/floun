@@ -9,7 +9,7 @@ cd floun
 npm test
 npm run build
 npm audit --omit=dev
-node --check public/background.js
+node --check build/background.js
 ```
 
 ## Manual Extension Check

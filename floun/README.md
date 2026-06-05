@@ -31,7 +31,7 @@ Do not commit `.env.local` or API key files.
 - `src/components/*analysis.tsx` modules turn JavaScript, token, TLS, and certificate scan payloads into structured findings.
 - `src/components/reportgen/reportDocument.ts` builds redacted report documents for AI prompts and PDF rendering.
 - `src/components/reportgen/*` builds redacted report content and writes the PDF.
-- `public/background.js` receives direct popup scan requests, performs active-tab page injection on demand, and runs TLS/certificate API calls.
+- `src/extension/background/*` receives direct popup scan requests, performs active-tab page injection on demand, and runs TLS/certificate API calls.
 
 ## Scan Scope
 
@@ -45,7 +45,7 @@ The baseline checks are:
 npm test
 npm run build
 npm audit --omit=dev
-node --check public/background.js
+node --check build/background.js
 ```
 
 The project uses Vite for the popup build and Vitest for unit tests. Production dependencies currently audit clean with `npm audit --omit=dev`.
