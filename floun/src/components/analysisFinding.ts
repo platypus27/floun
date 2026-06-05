@@ -1,4 +1,4 @@
-export type FindingSeverity = "Safe" | "Vulnerable" | "Info";
+export type FindingSeverity = "Safe" | "Review" | "Vulnerable" | "Info";
 
 export type FindingSource = "JavaScript" | "Tokens" | "SSL Header" | "Certificate";
 
@@ -18,8 +18,10 @@ export interface AnalysisFinding {
 export interface AnalysisSummary {
   total: number;
   safe: number;
+  review: number;
   vulnerable: number;
   informational: number;
+  reviewDetails: string[];
   vulnerableDetails: string[];
 }
 
@@ -30,8 +32,10 @@ interface FormatFindingOptions {
 export const emptyAnalysisSummary = (): AnalysisSummary => ({
   total: 0,
   safe: 0,
+  review: 0,
   vulnerable: 0,
   informational: 0,
+  reviewDetails: [],
   vulnerableDetails: [],
 });
 
@@ -41,6 +45,9 @@ export function summarizeFindings(findings: AnalysisFinding[]): AnalysisSummary 
 
     if (finding.severity === "Safe") {
       summary.safe += 1;
+    } else if (finding.severity === "Review") {
+      summary.review += 1;
+      summary.reviewDetails.push(formatFinding(finding));
     } else if (finding.severity === "Vulnerable") {
       summary.vulnerable += 1;
       summary.vulnerableDetails.push(formatFinding(finding));

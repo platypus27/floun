@@ -20,8 +20,10 @@ export const CERTIFICATE_SIGNATURES = {
   safe: CERTIFICATE_SIGNATURE_RULES
     .filter(rule => rule.severity === "Safe")
     .flatMap(rule => rule.aliases),
+  review: CERTIFICATE_SIGNATURE_RULES
+    .filter(rule => rule.severity === "Review")
+    .flatMap(rule => rule.aliases),
   vulnerable: CERTIFICATE_SIGNATURE_RULES
     .filter(rule => rule.severity === "Vulnerable")
     .flatMap(rule => rule.aliases),
 };
-

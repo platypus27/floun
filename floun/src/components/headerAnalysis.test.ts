@@ -18,13 +18,13 @@ test("classifies post-quantum TLS cipher suites as safe", () => {
   });
 
   expect(findings[0]).toMatchObject({
-    ruleId: "tls-kyber-family",
+    ruleId: "tls-ml-kem-family",
     severity: "Safe",
     confidence: "Medium",
   });
 });
 
-test("classifies unlisted TLS cipher suites as vulnerable migration risks", () => {
+test("classifies unlisted TLS cipher suites as review migration signals", () => {
   const findings = HeaderSecurityCheck({
     endpoints: [{
       details: {
@@ -36,7 +36,6 @@ test("classifies unlisted TLS cipher suites as vulnerable migration risks", () =
 
   expect(findings[0]).toMatchObject({
     ruleId: "tls-classical-or-unclassified-cipher",
-    severity: "Vulnerable",
+    severity: "Review",
   });
 });
-

@@ -122,6 +122,20 @@ ul {
   margin-bottom: 0.5rem;
 }
 
+.scan-warnings {
+  margin: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #c28a00;
+  border-radius: 0.4rem;
+  color: #614300;
+  background-color: #fff8e5;
+}
+
+.scan-warnings p {
+  margin-top: 0;
+  font-weight: 700;
+}
+
 /* Both pseudo-elements are circles */
 .total-occurrences::before,
 .total-occurrences::after {

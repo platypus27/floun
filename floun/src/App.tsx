@@ -11,7 +11,7 @@ import {
   emptyAnalysisSummary,
   summarizeFindings,
 } from './components/analysisFinding';
-import { ScanPayload, scanActiveTab } from './extension/scanClient';
+import { ScanPayload, emptyScanMeta, scanActiveTab } from './extension/scanClient';
 
 interface DashboardProps {
   resultsLoaded: boolean;
@@ -30,8 +30,19 @@ const displayAnalysisSummary = (summary: AnalysisSummary, title: string) => (
     <p className="section-title">{title} Results</p>
     <p>Total found: {summary.total}</p>
     <p>Safe: {summary.safe}</p>
+    <p>Review: {summary.review}</p>
     <p>Vulnerable: {summary.vulnerable}</p>
     <p>Info: {summary.informational}</p>
+    {summary.review > 0 && (
+      <div className="review-details">
+        <p>Review Details:</p>
+        <ul>
+          {summary.reviewDetails.map((detail, index) => (
+            <li key={`${title}-review-${index}`}>{detail}</li>
+          ))}
+        </ul>
+      </div>
+    )}
     {summary.vulnerable > 0 && (
       <div className="vulnerable-details">
         <p>Vulnerable Details:</p>
@@ -114,6 +125,7 @@ const App: React.FC = () => {
   const [tokenSummary, setTokenSummary] = useState<AnalysisSummary>(emptyAnalysisSummary());
   const [headerSummary, setHeaderSummary] = useState<AnalysisSummary>(emptyAnalysisSummary());
   const [certSummary, setCertSummary] = useState<AnalysisSummary>(emptyAnalysisSummary());
+  const [scanWarnings, setScanWarnings] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [resultsLoaded, setResultsLoaded] = useState(false);
 
@@ -131,12 +143,14 @@ const App: React.FC = () => {
     setHeaderSummary(summarizeFindings(nextHeaderResults));
     setCertSummary(summarizeFindings(nextCertResults));
     setTokenSummary(summarizeFindings(nextTokenResults));
+    setScanWarnings(scanPayload.scanMeta?.warnings || emptyScanMeta().warnings);
   };
 
   const handleScan = async () => {
     setIsLoading(true);
     setResultsLoaded(false);
     setScanError(null);
+    setScanWarnings([]);
 
     try {
       const scanPayload = await scanActiveTab();
@@ -180,6 +194,16 @@ const App: React.FC = () => {
       )}
       {resultsLoaded && !scanError && (
         <div id="results">
+          {scanWarnings.length > 0 && (
+            <div className="scan-warnings">
+              <p>Partial scan warnings:</p>
+              <ul>
+                {scanWarnings.map((warning, index) => (
+                  <li key={`scan-warning-${index}`}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <Dashboard
             resultsLoaded={resultsLoaded}
             jsSummary={jsSummary}

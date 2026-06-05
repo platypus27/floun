@@ -18,10 +18,19 @@ const secretFinding: AnalysisFinding = {
   sensitive: true,
 };
 
+const reviewFinding: AnalysisFinding = {
+  ruleId: "tls-classical-or-unclassified-cipher",
+  source: "SSL Header",
+  severity: "Review",
+  confidence: "Medium",
+  title: "TLS cipher needs migration review",
+  location: "SSL Header",
+};
+
 const groups: FindingGroups = {
   JavaScript: [],
   Tokens: [secretFinding],
-  Headers: [],
+  Headers: [reviewFinding],
   Certificates: [],
 };
 
@@ -33,12 +42,13 @@ test("buildFindingsText omits raw evidence", () => {
 });
 
 test("buildReportContent omits raw evidence from appendices", () => {
-  const sections = fallbackSections(buildFindingsText(groups), 1);
+  const sections = fallbackSections(buildFindingsText(groups), 1, 1);
   const content = buildReportContent(groups, sections);
 
   expect(content.appendix).toContain("Tokens Results");
   expect(content.appendix).not.toContain("secret-token-value");
+  expect(content.reviewMethodsCount).toBe(1);
+  expect(content.reviewMethodsBreakdown).toBe("JS: 0, Tokens: 0, Headers: 1, Certificates: 0");
   expect(content.vulnerableMethodsCount).toBe(1);
   expect(content.vulnerableMethodsBreakdown).toBe("JS: 0, Tokens: 1, Headers: 0, Certificates: 0");
 });
-

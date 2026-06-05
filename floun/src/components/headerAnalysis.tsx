@@ -54,7 +54,7 @@ export const HeaderSecurityCheck = (jsonData: unknown): AnalysisFinding[] => {
     }
 
     let tlsVersion = "<Unknown>";
-    const nonQuantumSafeCiphers: string[] = [];
+    const reviewCiphers: string[] = [];
 
     if (Array.isArray(endpoint.details.protocols)) {
       const tls13Supported = endpoint.details.protocols.some(protocol => protocol.version === "1.3");
@@ -80,26 +80,28 @@ export const HeaderSecurityCheck = (jsonData: unknown): AnalysisFinding[] => {
               source: "SSL Header",
               severity: rule.severity,
               confidence: rule.confidence,
-              title: `TLS ${tlsVersion} uses post-quantum cipher ${cipher.name}`,
+              title: `TLS ${tlsVersion} reports ${rule.name} ${cipher.name}`,
               location: "SSL Header",
+              details: rule.rationale,
               recommendation: rule.recommendation,
             });
           } else {
-            nonQuantumSafeCiphers.push(cipher.name);
+            reviewCiphers.push(cipher.name);
           }
         });
       });
     }
 
-    nonQuantumSafeCiphers.forEach(cipher => {
+    reviewCiphers.forEach(cipher => {
       const rule = classifyTlsCipher(cipher);
       findings.push({
         ruleId: rule.id,
         source: "SSL Header",
         severity: rule.severity,
         confidence: rule.confidence,
-        title: `TLS ${tlsVersion} uses non-quantum-safe cipher ${cipher}`,
+        title: `TLS ${tlsVersion} cipher needs migration review: ${cipher}`,
         location: "SSL Header",
+        details: rule.rationale,
         recommendation: rule.recommendation,
       });
     });

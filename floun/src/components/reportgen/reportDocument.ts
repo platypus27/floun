@@ -1,4 +1,4 @@
-import { AnalysisFinding, formatFindingsForReport } from "../analysisFinding";
+import { AnalysisFinding, FindingSeverity, formatFindingsForReport } from "../analysisFinding";
 
 export interface FindingGroups {
   JavaScript: AnalysisFinding[];
@@ -19,6 +19,8 @@ export interface ReportSections {
 
 export interface ReportContent extends ReportSections {
   appendix: string;
+  reviewMethodsCount: number;
+  reviewMethodsBreakdown: string;
   vulnerableMethodsCount: number;
   vulnerableMethodsBreakdown: string;
 }
@@ -54,21 +56,37 @@ export function flattenFindingGroups(groups: FindingGroups): AnalysisFinding[] {
 }
 
 export function countVulnerableFindings(findings: AnalysisFinding[]): number {
-  return findings.filter(finding => finding.severity === "Vulnerable").length;
+  return countFindingsBySeverity(findings, "Vulnerable");
+}
+
+export function countFindingsBySeverity(
+  findings: AnalysisFinding[],
+  severity: FindingSeverity
+): number {
+  return findings.filter(finding => finding.severity === severity).length;
 }
 
 export function buildFindingsText(groups: FindingGroups): string {
   return formatFindingsForReport(flattenFindingGroups(groups));
 }
 
-export function fallbackSections(findingsText: string, vulnerableCount: number): ReportSections {
+export function fallbackSections(
+  findingsText: string,
+  vulnerableCount: number,
+  reviewCount = 0
+): ReportSections {
   const vulnerabilityLine = vulnerableCount === 1
     ? "The scan found 1 vulnerable item."
     : `The scan found ${vulnerableCount} vulnerable items.`;
+  const reviewLine = reviewCount === 1
+    ? " It also found 1 item that needs migration review."
+    : reviewCount > 0
+      ? ` It also found ${reviewCount} items that need migration review.`
+      : "";
 
   return {
     introduction: "This report summarizes browser-extension scan results for quantum-safe web cryptography readiness.",
-    executiveSummary: `${vulnerabilityLine} Findings were redacted before report generation to avoid exposing sensitive values.`,
+    executiveSummary: `${vulnerabilityLine}${reviewLine} Findings were redacted before report generation to avoid exposing sensitive values.`,
     vulnerabilityAnalysis: findingsText,
     riskAssessment: "Classical asymmetric cryptography and weak legacy algorithms may create migration risk as quantum capabilities mature.",
     recommendations: "Prioritize TLS modernization, remove legacy cryptographic primitives, and plan migration toward standardized post-quantum algorithms.",
@@ -89,6 +107,13 @@ export function buildReportContent(groups: FindingGroups, sections: ReportSectio
     nextStep: sanitizeReportText(sections.nextStep),
     conclusion: sanitizeReportText(sections.conclusion),
     appendix: buildAppendix(groups),
+    reviewMethodsCount: countFindingsBySeverity(allFindings, "Review"),
+    reviewMethodsBreakdown: [
+      `JS: ${countFindingsBySeverity(groups.JavaScript, "Review")}`,
+      `Tokens: ${countFindingsBySeverity(groups.Tokens, "Review")}`,
+      `Headers: ${countFindingsBySeverity(groups.Headers, "Review")}`,
+      `Certificates: ${countFindingsBySeverity(groups.Certificates, "Review")}`,
+    ].join(", "),
     vulnerableMethodsCount: countVulnerableFindings(allFindings),
     vulnerableMethodsBreakdown: [
       `JS: ${countVulnerableFindings(groups.JavaScript)}`,
@@ -104,4 +129,3 @@ function buildAppendix(groups: FindingGroups): string {
     .map(([group, findings]) => `${group} Results:\n${formatFindingsForReport(findings)}`)
     .join("\n\n");
 }
-
