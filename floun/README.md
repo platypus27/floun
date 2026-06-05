@@ -1,70 +1,49 @@
-# Getting Started with Create React App
+# Floun Extension
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Floun is a Chrome extension popup that scans the active tab for web cryptography signals, summarizes findings, and can generate a redacted PDF report.
 
-## Available Scripts
+## Development
 
-In the project directory, you can run:
+```bash
+npm install
+npm test
+npm run build
+```
 
-### `npm start`
+The production extension is emitted to `build/`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Optional Gemini Report Text
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+PDF reports work without an AI key by using a local fallback summary. To enable Gemini-generated report sections, copy `.env.example` to `.env.local` and set:
 
-### `npm test`
+```bash
+REACT_APP_GEMINI_API_KEY=your-key-here
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Do not commit `.env.local` or API key files.
 
-### `npm run build`
+## Current Modules
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- `src/App.tsx` coordinates popup state, active-tab scanning, summaries, and report generation.
+- `src/extension/scanClient.ts` owns the popup-facing scan message contract.
+- `src/components/analysisFinding.ts` defines the shared findings interface, summary logic, formatting, and redaction helpers.
+- `src/components/cryptoRules.ts` defines the versioned cryptography rule catalogue.
+- `src/components/*analysis.tsx` modules turn JavaScript, token, TLS, and certificate scan payloads into structured findings.
+- `src/components/reportgen/reportDocument.ts` builds redacted report documents for AI prompts and PDF rendering.
+- `src/components/reportgen/*` builds redacted report content and writes the PDF.
+- `public/contentScript.js` bridges popup requests into the page.
+- `public/background.js` runs page injection plus TLS and certificate API calls.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Verification
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The baseline checks are:
 
-### `npm run eject`
+```bash
+npm test
+npm run build
+npm audit --omit=dev
+node --check public/background.js
+node --check public/contentScript.js
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The project uses Vite for the popup build and Vitest for unit tests. Production dependencies currently audit clean with `npm audit --omit=dev`.

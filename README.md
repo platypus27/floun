@@ -2,118 +2,56 @@
 
 ![Floun Logo](floun/public/icons/floun.png)
 
-Floun is a browser extension designed to scan websites for cryptographic vulnerabilities and prepare them for the quantum computing era. By identifying weak encryption methods and recommending quantum-resistant alternatives, Floun helps users future-proof their digital infrastructure.
-
-## Table of Contents
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Permissions](#permissions)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
-- [Contact](#contact)
-- [Roadmap](#roadmap)
+Floun is a Chrome extension that scans the active website for cryptographic signals, highlights potentially weak algorithms, and generates a redacted PDF report for quantum-safe cryptography planning.
 
 ## Features
-- **Comprehensive Scanning**: Detects weak encryption protocols, certificates, and security flaws.
-- **Real-Time Analysis**: Provides instant feedback on a website’s security posture.
-- **Quantum-Resistant Suggestions**: Recommends modern cryptographic solutions to future-proof systems.
-- **User-Friendly Interface**: Simple, intuitive design with one-click scanning.
-- **Open Source**: Transparent, community-driven, and adaptable to future advancements.
 
-## Installation
+- Scans active tabs for JavaScript cryptography patterns, session-token signals, TLS cipher suites, and certificate signature algorithms.
+- Summarizes findings as safe, vulnerable, or informational.
+- Generates PDF reports with redacted findings.
+- Supports optional Gemini-drafted report sections through a local environment variable.
 
-### Chrome Web Store (still pending review)
-1. Visit the Floun extension page on the Chrome Web Store.
-2. Click **Add to Chrome**.
-3. Confirm the installation by clicking **Add Extension**.
+## Development
 
-### Manual Installation
-1. Download the latest release from the GitHub repository.
-2. Extract the ZIP file to a folder on your computer.
-3. Open Chrome and go to `chrome://extensions/`.
-4. Enable **Developer Mode** (toggle in the top-right corner).
-5. Click **Load unpacked** and select the folder where you extracted the extension.
+The extension app lives in `floun/`.
 
-## Usage
-
-### Scan a Website:
-1. Click the **Floun** icon in the Chrome toolbar.
-2. Click **Scan** to analyze the currently active website.
-
-### View Results:
-- Floun will display a report of cryptographic vulnerabilities and recommendations.
-
-### Save or Export:
-- Save the report as a **PDF** or export it for further analysis.
-
-## Permissions
-Floun requires the following permissions to function:
-
-- `activeTab`: To analyze the cryptographic protocols of the currently active website.
-- `scripting`: To inject scripts for scanning and analysis.
-- `storage`: To save user preferences and scan results locally.
-- `host permissions`: To access and scan websites for vulnerabilities.
-
-## Privacy Policy
-Floun is committed to protecting your privacy. Here’s what you need to know:
-
-- **Data Collection**: Floun does not collect or store any personal data. The extension only analyzes cryptographic protocols and certificates on websites visited by the user.
-- **Permissions**:
-  - `activeTab`: Used to analyze the cryptographic protocols of the currently active website.
-  - `scripting`: Used to inject scripts for scanning and analysis.
-  - `storage`: Used to save user preferences and scan results locally.
-- **Data Storage**: All data is stored locally on the user’s device and is not shared with any third parties.
-
-
-## Contributing
-We welcome contributions from the community! Here’s how you can help:
-
-- **Report Issues**: If you find a bug or have a feature request, please open an issue here.
-- **Submit Pull Requests**: Fork the repository, make your changes, and submit a pull request.
-- **Spread the Word**: Share Floun with your network and help us grow the community.
-
-### Development Setup
-#### Clone the repository:
 ```bash
-git clone https://github.com/your-repo/floun.git
-```
-#### Install dependencies:
-```bash
+cd floun
 npm install
-```
-#### Build the extension:
-```bash
+npm test
 npm run build
+npm audit --omit=dev
 ```
-#### Load the extension in Chrome:
-1. Go to `chrome://extensions/`.
-2. Enable **Developer Mode**.
-3. Click **Load unpacked** and select the `dist` folder.
 
-## License
-Floun is not yet licensed as of now.
+The built extension is emitted to `floun/build/`.
 
-## Acknowledgments
-- **NIST**: For their work on post-quantum cryptography standards.
-- **OpenSSL**: For providing the tools to analyze cryptographic protocols.
-- **The Cybersecurity Community**: For their ongoing efforts to make the digital world safer.
+## Optional Gemini Report Text
 
-## Contact
-For questions, feedback, or support, please contact us:
+PDF reports work without an AI key by using local fallback text. To enable Gemini-generated sections, copy `floun/.env.example` to `floun/.env.local` and set:
 
-- **Email**: [ngaoyu27@gmail.com](mailto:ngaoyu27@gmail.com)
+```bash
+REACT_APP_GEMINI_API_KEY=your-key-here
+```
 
+Do not commit `.env.local` or API key files.
+
+## Manual Installation
+
+1. Run `npm run build` from `floun/`.
+2. Open Chrome and go to `chrome://extensions/`.
+3. Enable Developer Mode.
+4. Click Load unpacked and select `floun/build/`.
+
+## Privacy
+
+Floun stores scan data locally in the browser extension flow. If Gemini report drafting is configured, findings are redacted before being sent for report-section drafting. Raw tokens are not included in generated prompts or report appendices.
 
 ## Roadmap
 
-### Short-Term:
-- Add support for network-level scanning.
-- Integrate with popular cybersecurity frameworks.
+- Move background/content scripts into TypeScript.
+- Add deeper integration tests for Chrome message flows.
+- Expand the cryptography rule catalogue with references and confidence levels.
 
-### Long-Term:
-- Expand to other browsers (e.g., Firefox, Edge).
-- Develop a standalone application for enterprise use.
+## Contact
 
-Thank you for using Floun! Together, we can build a safer, more secure digital future.
+For questions, feedback, or support: [ngaoyu27@gmail.com](mailto:ngaoyu27@gmail.com)
