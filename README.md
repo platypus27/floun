@@ -1,13 +1,13 @@
-# Floun - Quantum-Resistant Protocol Analyzer
+# Floun - Crypto-Readiness Signal Scanner
 
 ![Floun Logo](floun/public/icons/floun.png)
 
-Floun is a Chrome extension that scans the active website for cryptographic signals, highlights potentially weak algorithms, and generates a redacted PDF report for quantum-safe cryptography planning.
+Floun is a lightweight Chrome extension that scans the active website for cryptographic readiness signals, highlights migration review items and known weak crypto, and generates a redacted PDF report for quantum-safe cryptography planning.
 
 ## Features
 
 - Scans active tabs for JavaScript cryptography patterns, session-token signals, TLS cipher suites, and certificate signature algorithms.
-- Summarizes findings as safe, vulnerable, or informational.
+- Summarizes findings as safe, review, vulnerable, or informational.
 - Generates PDF reports with redacted findings.
 - Supports optional Gemini-drafted report sections through a local environment variable.
 
@@ -48,9 +48,9 @@ Floun stores scan data locally in the browser extension flow. If Gemini report d
 
 ## Roadmap
 
-- Move background/content scripts into TypeScript.
+- Move the background service worker into TypeScript.
 - Add deeper integration tests for Chrome message flows.
-- Expand the cryptography rule catalogue with references and confidence levels.
+- Expand the cryptography rule catalogue as standards and browser support evolve.
 
 ## Contact
 

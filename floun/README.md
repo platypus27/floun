@@ -1,6 +1,6 @@
 # Floun Extension
 
-Floun is a Chrome extension popup that scans the active tab for web cryptography signals, summarizes findings, and can generate a redacted PDF report.
+Floun is a lightweight Chrome extension popup for crypto-readiness and migration signals. It scans the active tab for visible JavaScript, token, TLS, and certificate indicators, summarizes findings, and can generate a redacted PDF report.
 
 ## Development
 
@@ -27,12 +27,15 @@ Do not commit `.env.local` or API key files.
 - `src/App.tsx` coordinates popup state, active-tab scanning, summaries, and report generation.
 - `src/extension/scanClient.ts` owns the popup-facing scan message contract.
 - `src/components/analysisFinding.ts` defines the shared findings interface, summary logic, formatting, and redaction helpers.
-- `src/components/cryptoRules.ts` defines the versioned cryptography rule catalogue.
+- `src/components/cryptoRules.ts` defines the versioned cryptography rule catalogue, including rule status, rationale, limitations, and references.
 - `src/components/*analysis.tsx` modules turn JavaScript, token, TLS, and certificate scan payloads into structured findings.
 - `src/components/reportgen/reportDocument.ts` builds redacted report documents for AI prompts and PDF rendering.
 - `src/components/reportgen/*` builds redacted report content and writes the PDF.
-- `public/contentScript.js` bridges popup requests into the page.
-- `public/background.js` runs page injection plus TLS and certificate API calls.
+- `public/background.js` receives direct popup scan requests, performs active-tab page injection on demand, and runs TLS/certificate API calls.
+
+## Scan Scope
+
+Findings use `Safe`, `Review`, `Vulnerable`, and `Info` severities. Classical or unclassified TLS/certificate cryptography is reported as `Review` for migration planning; `Vulnerable` is reserved for known weak or deprecated signals such as MD5, SHA-1, DES, 3DES, and RC4.
 
 ## Verification
 
@@ -43,7 +46,6 @@ npm test
 npm run build
 npm audit --omit=dev
 node --check public/background.js
-node --check public/contentScript.js
 ```
 
 The project uses Vite for the popup build and Vitest for unit tests. Production dependencies currently audit clean with `npm audit --omit=dev`.
