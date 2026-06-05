@@ -1,9 +1,78 @@
-import { buildScanTarget } from "./scanClient";
+import {
+  SCAN_WEBSITE_ACTION,
+  buildScanTarget,
+  scanActiveTab,
+} from "./scanClient";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 test("builds a scan target from a URL", () => {
-  expect(buildScanTarget("https://example.com/path?query=1")).toEqual({
+  expect(buildScanTarget("https://example.com/path?query=1", 7)).toEqual({
+    tabId: 7,
     protocol: "https:",
     hostname: "example.com",
+    pageOrigin: "https://example.com",
+    url: "https://example.com/path?query=1",
   });
 });
 
+test("rejects non-web scan targets", () => {
+  expect(() => buildScanTarget("file:///C:/tmp/page.html", 7)).toThrow(
+    "Floun can scan HTTP and HTTPS tabs only."
+  );
+});
+
+test("requests scans directly from the background service worker", async () => {
+  const sendMessage = vi.fn((message, callback) => {
+    callback({
+      status: "success",
+      data: {
+        tokens: [],
+        jsScripts: [],
+        TLS: null,
+        certificates: null,
+        scanMeta: {
+          page: { status: "complete" },
+          tls: { status: "unavailable", message: "TLS unavailable." },
+          certificates: { status: "unavailable", message: "Certificate unavailable." },
+          warnings: [
+            "TLS scan unavailable: TLS unavailable.",
+            "Certificate scan unavailable: Certificate unavailable.",
+          ],
+        },
+      },
+    });
+  });
+  const tabsSendMessage = vi.fn();
+
+  vi.stubGlobal("chrome", {
+    tabs: {
+      query: vi.fn((_query, callback) => {
+        callback([{ id: 7, url: "https://example.com/path?query=1" }]);
+      }),
+      sendMessage: tabsSendMessage,
+    },
+    runtime: {
+      lastError: undefined,
+      sendMessage,
+    },
+  });
+
+  const payload = await scanActiveTab();
+
+  expect(sendMessage).toHaveBeenCalledWith({
+    action: SCAN_WEBSITE_ACTION,
+    target: {
+      tabId: 7,
+      protocol: "https:",
+      hostname: "example.com",
+      pageOrigin: "https://example.com",
+      url: "https://example.com/path?query=1",
+    },
+  }, expect.any(Function));
+  expect(tabsSendMessage).not.toHaveBeenCalled();
+  expect(payload.scanMeta.warnings).toHaveLength(2);
+});

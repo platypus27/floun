@@ -2,19 +2,16 @@
   "manifest_version": 3,
   "name": "Floun",
   "version": "2.0",
-  "description": "Quantum Resistant Protocol Sentinel",
+  "description": "Lightweight crypto-readiness and migration signal scanner",
   "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["<all_urls>", "file://*/*"],
+  "host_permissions": [
+    "https://api.ssllabs.com/*",
+    "https://ssl-checker.io/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>", "file://*/*"],
-      "js": ["contentScript.js"]
-    }
-  ],
   "action": {
     "default_popup": "index.html",
     "default_icon": {

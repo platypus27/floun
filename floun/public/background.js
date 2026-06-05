@@ -9,6 +9,10 @@ const TLS_SCAN = Object.freeze({
 
 const successResponse = (data) => ({ status: "success", data });
 const errorResponse = (message) => ({ status: "error", message });
+const completeMeta = () => ({ status: "complete" });
+const partialMeta = (message) => ({ status: "partial", message });
+const unavailableMeta = (message) => ({ status: "unavailable", message });
+const emptyPageScan = () => ({ tokens: [], headers: {}, jsScripts: [] });
 
 const getErrorMessage = (error) => (
   error instanceof Error ? error.message : "Unknown error"
@@ -21,48 +25,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
-  runWebsiteScan(message.target, sender)
+  runWebsiteScan(message.target)
     .then((data) => sendResponse(successResponse(data)))
     .catch((error) => sendResponse(errorResponse(getErrorMessage(error))));
 
   return true;
 });
 
-async function runWebsiteScan(target, sender) {
-  const tabId = sender.tab?.id;
-
-  if (tabId === undefined) {
-    throw new Error("Tab ID not found.");
-  }
-
+async function runWebsiteScan(target) {
   if (!isValidScanTarget(target)) {
-    throw new Error("Scan target is missing protocol, hostname, or page origin.");
+    throw new Error("Scan target is missing tab ID, protocol, hostname, or page origin.");
   }
 
-  const [pageScan, TLS, certificates] = await Promise.all([
-    executePageScan(tabId, target.pageOrigin),
+  const [pageScan, tlsScan, certificateScan] = await Promise.all([
+    executePageScan(target.tabId, target.pageOrigin),
     fetchTlsScan(target),
     fetchCertificateScan(target),
   ]);
+  const scanMeta = buildScanMeta(pageScan.meta, tlsScan.meta, certificateScan.meta);
 
   return {
-    ...pageScan,
-    TLS,
-    certificates,
+    ...pageScan.data,
+    TLS: tlsScan.data,
+    certificates: certificateScan.data,
+    scanMeta,
   };
 }
 
 function isValidScanTarget(target) {
   return Boolean(
     target &&
-    typeof target.protocol === "string" &&
+    Number.isInteger(target.tabId) &&
+    ["http:", "https:"].includes(target.protocol) &&
     typeof target.hostname === "string" &&
-    typeof target.pageOrigin === "string"
+    target.hostname.length > 0 &&
+    typeof target.pageOrigin === "string" &&
+    target.pageOrigin.length > 0
   );
 }
 
 function executePageScan(tabId, pageOrigin) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     chrome.scripting.executeScript(
       {
         target: { tabId },
@@ -73,18 +76,27 @@ function executePageScan(tabId, pageOrigin) {
         const lastError = chrome.runtime.lastError;
 
         if (lastError) {
-          reject(new Error(lastError.message || "Script injection failed."));
+          resolve({
+            data: emptyPageScan(),
+            meta: unavailableMeta(lastError.message || "Script injection failed."),
+          });
           return;
         }
 
         const scanResult = injectionResults?.[0]?.result;
 
         if (scanResult?.error) {
-          reject(new Error(scanResult.error));
+          resolve({
+            data: emptyPageScan(),
+            meta: partialMeta(scanResult.error),
+          });
           return;
         }
 
-        resolve(scanResult || { tokens: [], headers: {}, jsScripts: [] });
+        resolve({
+          data: scanResult || emptyPageScan(),
+          meta: completeMeta(),
+        });
       }
     );
   });
@@ -98,27 +110,46 @@ async function fetchTlsScan(target) {
       const response = await fetch(apiUrl);
 
       if (!response.ok) {
-        return null;
+        return {
+          data: null,
+          meta: unavailableMeta(`SSL Labs returned HTTP ${response.status}.`),
+        };
       }
 
       const data = await response.json();
 
       if (data.status === "READY") {
-        return data;
+        return { data, meta: completeMeta() };
+      }
+
+      if (data.status === "ERROR") {
+        return {
+          data: null,
+          meta: unavailableMeta(data.statusMessage || "SSL Labs reported an error."),
+        };
       }
 
       await delay(TLS_SCAN.pollDelayMs);
     }
 
-    return null;
-  } catch {
-    return null;
+    return {
+      data: null,
+      meta: partialMeta("SSL Labs did not finish the TLS scan before the polling limit."),
+    };
+  } catch (error) {
+    return {
+      data: null,
+      meta: unavailableMeta(getErrorMessage(error)),
+    };
   }
 }
 
 async function fetchCertificateScan(target) {
   if (target.protocol !== "https:") {
-    return null;
+    return {
+      data: null,
+      meta: unavailableMeta("Certificate scan requires an HTTPS page."),
+    };
   }
 
   try {
@@ -127,14 +158,52 @@ async function fetchCertificateScan(target) {
     );
 
     if (!response.ok) {
-      return null;
+      return {
+        data: null,
+        meta: unavailableMeta(`Certificate lookup returned HTTP ${response.status}.`),
+      };
     }
 
     const data = await response.json();
-    return data && Object.keys(data).length > 0 ? data : null;
-  } catch {
-    return null;
+    const hasCertificateData = data && Object.keys(data).length > 0;
+
+    return {
+      data: hasCertificateData ? data : null,
+      meta: hasCertificateData
+        ? completeMeta()
+        : unavailableMeta("Certificate lookup returned no usable data."),
+    };
+  } catch (error) {
+    return {
+      data: null,
+      meta: unavailableMeta(getErrorMessage(error)),
+    };
   }
+}
+
+function buildScanMeta(page, tls, certificates) {
+  const scanMeta = {
+    page,
+    tls,
+    certificates,
+    warnings: [],
+  };
+  const labels = {
+    page: "Page scan",
+    tls: "TLS scan",
+    certificates: "Certificate scan",
+  };
+
+  Object.entries(labels).forEach(([key, label]) => {
+    const meta = scanMeta[key];
+
+    if (meta.status !== "complete") {
+      const message = meta.message ? `: ${meta.message}` : "";
+      scanMeta.warnings.push(`${label} ${meta.status}${message}`);
+    }
+  });
+
+  return scanMeta;
 }
 
 function collectPageScan(pageOrigin) {

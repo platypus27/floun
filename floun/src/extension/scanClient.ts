@@ -1,10 +1,27 @@
 /// <reference types="chrome"/>
 
-export const RUN_SCANS_ACTION = "runScans";
+export const SCAN_WEBSITE_ACTION = "scanWebsite";
+
+export type ScanAdapterStatus = "complete" | "partial" | "unavailable";
+
+export interface ScanAdapterMeta {
+  status: ScanAdapterStatus;
+  message?: string;
+}
+
+export interface ScanMeta {
+  page: ScanAdapterMeta;
+  tls: ScanAdapterMeta;
+  certificates: ScanAdapterMeta;
+  warnings: string[];
+}
 
 export interface ScanTarget {
+  tabId: number;
   protocol: string;
   hostname: string;
+  pageOrigin: string;
+  url: string;
 }
 
 export interface ScanPayload {
@@ -12,6 +29,7 @@ export interface ScanPayload {
   TLS?: unknown;
   certificates?: unknown;
   tokens?: unknown;
+  scanMeta: ScanMeta;
 }
 
 interface ScanSuccessResponse {
@@ -26,19 +44,33 @@ interface ScanErrorResponse {
 
 type ScanResponse = ScanSuccessResponse | ScanErrorResponse | undefined;
 
-export function buildScanTarget(url: string): ScanTarget {
+export const emptyScanMeta = (): ScanMeta => ({
+  page: { status: "unavailable", message: "Page scan has not run." },
+  tls: { status: "unavailable", message: "TLS scan has not run." },
+  certificates: { status: "unavailable", message: "Certificate scan has not run." },
+  warnings: [],
+});
+
+export function buildScanTarget(url: string, tabId: number): ScanTarget {
   const parsedUrl = new URL(url);
 
+  if (!["http:", "https:"].includes(parsedUrl.protocol) || !parsedUrl.hostname) {
+    throw new Error("Floun can scan HTTP and HTTPS tabs only.");
+  }
+
   return {
+    tabId,
     protocol: parsedUrl.protocol,
     hostname: parsedUrl.hostname,
+    pageOrigin: parsedUrl.origin,
+    url: parsedUrl.href,
   };
 }
 
 export async function scanActiveTab(): Promise<ScanPayload> {
   const activeTab = await queryActiveTab();
-  const target = buildScanTarget(activeTab.url || "");
-  const response = await requestScan(activeTab.id as number, target);
+  const target = buildScanTarget(activeTab.url || "", activeTab.id as number);
+  const response = await requestScan(target);
 
   if (!response || response.status !== "success") {
     throw new Error(response?.message || "Scan failed.");
@@ -62,11 +94,10 @@ function queryActiveTab(): Promise<chrome.tabs.Tab> {
   });
 }
 
-function requestScan(tabId: number, target: ScanTarget): Promise<ScanResponse> {
+function requestScan(target: ScanTarget): Promise<ScanResponse> {
   return new Promise(resolve => {
-    chrome.tabs.sendMessage(
-      tabId,
-      { action: RUN_SCANS_ACTION, target },
+    chrome.runtime.sendMessage(
+      { action: SCAN_WEBSITE_ACTION, target },
       response => {
         const lastError = chrome.runtime.lastError;
 
@@ -80,4 +111,3 @@ function requestScan(tabId: number, target: ScanTarget): Promise<ScanResponse> {
     );
   });
 }
-
