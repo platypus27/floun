@@ -6,7 +6,7 @@ dist/
 build/
 
 # Release artifacts
-release/
+/release/
 floun/release/
 *.zip
 

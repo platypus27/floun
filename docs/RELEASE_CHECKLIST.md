@@ -6,11 +6,13 @@ Run this checklist before packaging, loading, or publishing a release build.
 
 ```bash
 cd floun
+npm run release:ready
 npm run release:check
 npm run package:extension
 ```
 
 `npm run package:extension` writes `release/floun-2.0.0.zip` after the full release check passes.
+`npm run release:ready` also verifies the release artifact and Chrome Web Store prep assets.
 
 Individual checks remain available when debugging:
 
@@ -20,6 +22,8 @@ npm run build
 npm run audit:prod
 npm run typecheck
 npm run check:worker
+npm run release:artifact
+npm run store:check
 ```
 
 ## Manual Extension QA
@@ -34,6 +38,15 @@ npm run check:worker
 8. Attempt unsupported extension/browser pages such as `chrome://extensions/` and confirm the popup shows a graceful error.
 9. Generate a PDF report without `REACT_APP_GEMINI_API_KEY` configured and confirm raw tokens are absent.
 10. If Gemini drafting is configured locally, confirm generated report text does not contain raw tokens, code snippets, hashes, or certificate bodies.
+11. Record the manual QA result in `docs/release/2.0.0/QA_EVIDENCE.md`.
+
+## Chrome Web Store Prep
+
+- Use `docs/store/CHROME_WEB_STORE_LISTING.md` for listing copy and reviewer notes.
+- Use `docs/store/CHROME_WEB_STORE_PRIVACY.md` for dashboard privacy field copy.
+- Use `docs/store/PRIVACY_POLICY.md` as the GitHub-hosted privacy policy draft after pushing.
+- Upload the required store assets from `docs/store/assets/`.
+- Do not upload the package until manual QA evidence is complete.
 
 ## Security Hygiene
 

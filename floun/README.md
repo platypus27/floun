@@ -19,6 +19,12 @@ npm run package:extension
 
 The package command runs the full release check, then writes `release/floun-2.0.0.zip`.
 
+To verify the package artifact and Chrome Web Store prep material:
+
+```bash
+npm run release:ready
+```
+
 For manual QA, serve the HTTP fixture:
 
 ```bash

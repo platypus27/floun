@@ -32,6 +32,13 @@ npm run package:extension
 
 The zip artifact is emitted to `floun/release/floun-2.0.0.zip`.
 
+To verify release and Chrome Web Store prep together:
+
+```bash
+cd floun
+npm run release:ready
+```
+
 ## Optional Gemini Report Text
 
 PDF reports work without an AI key by using local fallback text. To enable Gemini-generated sections, copy `floun/.env.example` to `floun/.env.local` and set:

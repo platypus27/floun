@@ -1,6 +1,6 @@
 # Floun 2.0.0 Release Notes
 
-Status: prepared locally; not pushed or tagged.
+Status: prepared locally for release QA and Chrome Web Store submission; not pushed, tagged, uploaded, or published.
 
 ## Release Theme
 
@@ -14,6 +14,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Added explainable findings in the popup and reports, including rationale, limitations, recommendations, confidence, standard status, references, and redacted evidence.
 - Kept PDF generation lazy-loaded and report output redacted.
 - Added repeatable release-candidate scripts, a Windows-first PowerShell packager, and an HTTP-served QA fixture.
+- Added release-readiness checks, QA evidence docs, Chrome Web Store listing/privacy copy, and required store asset files.
 
 ## Verification Commands
 
@@ -22,6 +23,9 @@ Run from `floun/`:
 ```bash
 npm run release:check
 npm run package:extension
+npm run release:artifact
+npm run store:check
+npm run release:ready
 npm test
 npm run build
 npm audit --omit=dev
@@ -36,6 +40,7 @@ git diff --check
 ```
 
 The package artifact is written to `floun/release/floun-2.0.0.zip`.
+Chrome Web Store prep material lives under `docs/store/`.
 
 ## Manual QA Targets
 
@@ -45,6 +50,7 @@ The package artifact is written to `floun/release/floun-2.0.0.zip`.
 - Scan an HTTP site and confirm certificate lookup is reported as unavailable.
 - Attempt unsupported pages and confirm graceful errors.
 - Generate a PDF report and confirm raw tokens are absent.
+- Record manual QA in `docs/release/2.0.0/QA_EVIDENCE.md`.
 
 ## Scope Boundaries
 
@@ -56,4 +62,4 @@ The package artifact is written to `floun/release/floun-2.0.0.zip`.
 
 ## Publication Status
 
-This release candidate is push-ready after manual QA, but it has not been pushed, tagged, or published.
+This release candidate is push-ready after manual QA, but it has not been pushed, tagged, uploaded, or published.
