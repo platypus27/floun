@@ -11,7 +11,7 @@ npm run release:check
 npm run package:extension
 ```
 
-`npm run package:extension` writes `release/floun-2.0.0.zip` after the full release check passes.
+`npm run package:extension` writes `release/floun-2.0.0.zip` and byte-identical alias `release/floun-2.0.zip` after the full release check passes.
 `npm run release:ready` also verifies the release artifact and Chrome Web Store prep assets.
 
 Individual checks remain available when debugging:
@@ -32,7 +32,7 @@ npm run store:check
 2. Load `floun/build/` in `chrome://extensions/`, or unzip `floun/release/floun-2.0.0.zip` and load the unpacked output.
 3. Start the local HTTP fixture with `npm run fixture:server`.
 4. Open `http://127.0.0.1:4174/crypto-readiness.html`.
-5. Run Scan from the popup and confirm JavaScript, Token, Header, and Certificate sections render without console errors.
+5. Run Scan from the popup and confirm JavaScript, Token, TLS, and Certificate sections render without console errors.
 6. Confirm the HTTP fixture reports a certificate adapter warning rather than reintroducing `file://` support or broad host permissions.
 7. Scan a known HTTPS site and confirm TLS and certificate adapters report `complete`, `partial`, or `unavailable` states clearly.
 8. Attempt unsupported extension/browser pages such as `chrome://extensions/` and confirm the popup shows a graceful error.

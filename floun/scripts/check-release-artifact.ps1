@@ -7,10 +7,9 @@ $PackagePath = Join-Path $ProjectRoot "package.json"
 $Package = Get-Content -Raw -LiteralPath $PackagePath | ConvertFrom-Json
 $Version = $Package.version
 $ZipPath = Join-Path $ProjectRoot "release\floun-$Version.zip"
-
-if (-not (Test-Path -LiteralPath $ZipPath)) {
-  throw "Release artifact is missing: $ZipPath"
-}
+$VersionParts = $Version -split "\."
+$AliasVersion = if ($VersionParts.Length -ge 2) { "$($VersionParts[0]).$($VersionParts[1])" } else { $Version }
+$AliasZipPath = Join-Path $ProjectRoot "release\floun-$AliasVersion.zip"
 
 $RequiredEntries = @(
   "manifest.json",
@@ -41,65 +40,96 @@ $ForbiddenText = @(
 
 $TextExtensions = @(".css", ".html", ".js", ".json", ".txt")
 $GeminiKeyPattern = "AIza[0-9A-Za-z_-]{20,}"
-$Zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
 
-try {
-  $NormalizedEntries = @($Zip.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
+function Test-ReleaseZip {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $CandidateZipPath
+  )
 
-  foreach ($RequiredEntry in $RequiredEntries) {
-    if ($NormalizedEntries -notcontains $RequiredEntry) {
-      throw "Release artifact is missing required entry: $RequiredEntry"
-    }
+  if (-not (Test-Path -LiteralPath $CandidateZipPath)) {
+    throw "Release artifact is missing: $CandidateZipPath"
   }
 
-  foreach ($RequiredPrefix in $RequiredPrefixes) {
-    if (-not ($NormalizedEntries | Where-Object { $_.StartsWith($RequiredPrefix) })) {
-      throw "Release artifact is missing required directory: $RequiredPrefix"
-    }
-  }
+  $Zip = [System.IO.Compression.ZipFile]::OpenRead($CandidateZipPath)
 
-  foreach ($EntryName in $NormalizedEntries) {
-    foreach ($Pattern in $ForbiddenEntryPatterns) {
-      if ($EntryName -match $Pattern) {
-        throw "Release artifact contains forbidden entry: $EntryName"
-      }
-    }
-  }
+  try {
+    $NormalizedEntries = @($Zip.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
 
-  foreach ($Entry in $Zip.Entries) {
-    $EntryName = $Entry.FullName.Replace("\", "/")
-    $Extension = [System.IO.Path]::GetExtension($EntryName).ToLowerInvariant()
-
-    if ($TextExtensions -notcontains $Extension) {
-      continue
-    }
-
-    $Reader = [System.IO.StreamReader]::new($Entry.Open())
-    try {
-      $Content = $Reader.ReadToEnd()
-    } finally {
-      $Reader.Dispose()
-    }
-
-    foreach ($ForbiddenValue in $ForbiddenText) {
-      if ($Content.Contains($ForbiddenValue)) {
-        throw "Release artifact contains forbidden fixture or secret marker in $EntryName"
+    foreach ($RequiredEntry in $RequiredEntries) {
+      if ($NormalizedEntries -notcontains $RequiredEntry) {
+        throw "Release artifact is missing required entry: $RequiredEntry"
       }
     }
 
-    if ($Content -match $GeminiKeyPattern) {
-      throw "Release artifact contains a Gemini API-key-like value in $EntryName"
+    foreach ($RequiredPrefix in $RequiredPrefixes) {
+      if (-not ($NormalizedEntries | Where-Object { $_.StartsWith($RequiredPrefix) })) {
+        throw "Release artifact is missing required directory: $RequiredPrefix"
+      }
     }
+
+    foreach ($EntryName in $NormalizedEntries) {
+      foreach ($Pattern in $ForbiddenEntryPatterns) {
+        if ($EntryName -match $Pattern) {
+          throw "Release artifact contains forbidden entry: $EntryName"
+        }
+      }
+    }
+
+    foreach ($Entry in $Zip.Entries) {
+      $EntryName = $Entry.FullName.Replace("\", "/")
+      $Extension = [System.IO.Path]::GetExtension($EntryName).ToLowerInvariant()
+
+      if ($TextExtensions -notcontains $Extension) {
+        continue
+      }
+
+      $Reader = [System.IO.StreamReader]::new($Entry.Open())
+      try {
+        $Content = $Reader.ReadToEnd()
+      } finally {
+        $Reader.Dispose()
+      }
+
+      foreach ($ForbiddenValue in $ForbiddenText) {
+        if ($Content.Contains($ForbiddenValue)) {
+          throw "Release artifact contains forbidden fixture or secret marker in $EntryName"
+        }
+      }
+
+      if ($Content -match $GeminiKeyPattern) {
+        throw "Release artifact contains a Gemini API-key-like value in $EntryName"
+      }
+    }
+  } finally {
+    $Zip.Dispose()
   }
-} finally {
-  $Zip.Dispose()
+
+  $Hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $CandidateZipPath).Hash.ToLowerInvariant()
+  $Size = (Get-Item -LiteralPath $CandidateZipPath).Length
+
+  [PSCustomObject]@{
+    Path = $CandidateZipPath
+    Hash = $Hash
+    Size = $Size
+    Entries = @($NormalizedEntries | Sort-Object)
+  }
 }
 
-$Hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $ZipPath).Hash.ToLowerInvariant()
-$Size = (Get-Item -LiteralPath $ZipPath).Length
+$Canonical = Test-ReleaseZip -CandidateZipPath $ZipPath
+$Alias = if ($AliasZipPath -ne $ZipPath) {
+  Test-ReleaseZip -CandidateZipPath $AliasZipPath
+} else {
+  $Canonical
+}
 
-Write-Host "Release artifact verified: $ZipPath"
-Write-Host "Size bytes: $Size"
-Write-Host "SHA-256: $Hash"
+if ($Alias.Hash -ne $Canonical.Hash) {
+  throw "Release alias hash does not match canonical artifact: $($Alias.Path)"
+}
+
+Write-Host "Release artifact verified: $($Canonical.Path)"
+Write-Host "Alias artifact verified: $($Alias.Path)"
+Write-Host "Size bytes: $($Canonical.Size)"
+Write-Host "SHA-256: $($Canonical.Hash)"
 Write-Host "Archive entries:"
-$NormalizedEntries | Sort-Object | ForEach-Object { Write-Host " - $_" }
+$Canonical.Entries | ForEach-Object { Write-Host " - $_" }

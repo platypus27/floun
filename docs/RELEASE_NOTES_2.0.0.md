@@ -15,6 +15,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Kept PDF generation lazy-loaded and report output redacted.
 - Added repeatable release-candidate scripts, a Windows-first PowerShell packager, and an HTTP-served QA fixture.
 - Added release-readiness checks, QA evidence docs, Chrome Web Store listing/privacy copy, and required store asset files.
+- Added fixture-driven analyzer calibration coverage and refreshed byte-identical `2.0.0` / `2.0` release zips from the current source.
 
 ## Verification Commands
 
@@ -39,7 +40,7 @@ Run from the repository root:
 git diff --check
 ```
 
-The package artifact is written to `floun/release/floun-2.0.0.zip`.
+The package artifacts are written to `floun/release/floun-2.0.0.zip` and byte-identical alias `floun/release/floun-2.0.zip`.
 Chrome Web Store prep material lives under `docs/store/`.
 
 ## Manual QA Targets
@@ -62,4 +63,4 @@ Chrome Web Store prep material lives under `docs/store/`.
 
 ## Publication Status
 
-This release candidate is push-ready after manual QA, but it has not been pushed, tagged, uploaded, or published.
+This release candidate is not pushed, tagged, uploaded, or published. Manual Chrome extension QA must be completed or the recorded automation blockage must be resolved before release submission.

@@ -12,6 +12,9 @@ if (-not (Test-Path -LiteralPath $PackagePath)) {
 $Package = Get-Content -Raw -LiteralPath $PackagePath | ConvertFrom-Json
 $Version = $Package.version
 $ZipPath = Join-Path $ReleaseDir "floun-$Version.zip"
+$VersionParts = $Version -split "\."
+$AliasVersion = if ($VersionParts.Length -ge 2) { "$($VersionParts[0]).$($VersionParts[1])" } else { $Version }
+$AliasZipPath = Join-Path $ReleaseDir "floun-$AliasVersion.zip"
 
 @("manifest.json", "index.html", "background.js") | ForEach-Object {
   $RequiredPath = Join-Path $BuildDir $_
@@ -26,7 +29,16 @@ if (Test-Path -LiteralPath $ZipPath) {
   Remove-Item -LiteralPath $ZipPath -Force
 }
 
+if ($AliasZipPath -ne $ZipPath -and (Test-Path -LiteralPath $AliasZipPath)) {
+  Remove-Item -LiteralPath $AliasZipPath -Force
+}
+
 $BuildContents = Join-Path $BuildDir "*"
 Compress-Archive -Path $BuildContents -DestinationPath $ZipPath -Force
 
 Write-Host "Packaged Floun extension: $ZipPath"
+
+if ($AliasZipPath -ne $ZipPath) {
+  Copy-Item -LiteralPath $ZipPath -Destination $AliasZipPath -Force
+  Write-Host "Packaged Floun extension alias: $AliasZipPath"
+}
