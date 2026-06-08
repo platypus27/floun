@@ -44,6 +44,13 @@ export async function scanActiveTab(): Promise<ScanPayload> {
 function queryActiveTab(): Promise<chrome.tabs.Tab> {
   return new Promise((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const lastError = chrome.runtime.lastError;
+
+      if (lastError) {
+        reject(new Error(lastError.message || "Unable to query active tab."));
+        return;
+      }
+
       const activeTab = tabs[0];
 
       if (activeTab?.id === undefined || !activeTab.url) {

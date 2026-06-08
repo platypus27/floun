@@ -93,3 +93,38 @@ test("rejects malformed background responses", async () => {
 
   await expect(scanActiveTab()).rejects.toThrow("Scan failed.");
 });
+
+test("rejects tab query runtime errors with the Chrome error message", async () => {
+  vi.stubGlobal("chrome", {
+    tabs: {
+      query: vi.fn((_query, callback) => {
+        callback([]);
+      }),
+    },
+    runtime: {
+      lastError: { message: "Cannot access active tab." },
+      sendMessage: vi.fn(),
+    },
+  });
+
+  await expect(scanActiveTab()).rejects.toThrow("Cannot access active tab.");
+});
+
+test("rejects background runtime errors with the Chrome error message", async () => {
+  vi.stubGlobal("chrome", {
+    tabs: {
+      query: vi.fn((_query, callback) => {
+        callback([{ id: 7, url: "https://example.com/path?query=1" }]);
+      }),
+    },
+    runtime: {
+      lastError: undefined as chrome.runtime.LastError | undefined,
+      sendMessage: vi.fn((_message, callback) => {
+        chrome.runtime.lastError = { message: "Background worker is unavailable." };
+        callback(undefined);
+      }),
+    },
+  });
+
+  await expect(scanActiveTab()).rejects.toThrow("Background worker is unavailable.");
+});
