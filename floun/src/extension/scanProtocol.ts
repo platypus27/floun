@@ -29,6 +29,11 @@ const isStringArray = (value: unknown): value is string[] => (
   Array.isArray(value) && value.every(item => typeof item === "string")
 );
 
+const isStringRecord = (value: unknown): value is Record<string, string> => (
+  isRecord(value) &&
+  Object.entries(value).every(([key, item]) => key.trim().length > 0 && typeof item === "string")
+);
+
 const isScanAdapterMeta = (value: unknown): boolean => (
   isRecord(value) &&
   ["complete", "partial", "unavailable"].includes(value.status as string) &&
@@ -85,7 +90,7 @@ const isScanPayload = (value: unknown): value is ScanPayload => {
   }
 
   return Array.isArray(value.jsScripts) &&
-    isRecord(value.headers) &&
+    isStringRecord(value.headers) &&
     isStringArray(value.tokens) &&
     isTlsScanData(value.TLS) &&
     isCertificateScanData(value.certificates) &&

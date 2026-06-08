@@ -104,6 +104,24 @@ test("rejects malformed normalized scan facts in success responses", () => {
   })).toBe(false);
 });
 
+test("rejects malformed page header facts in success responses", () => {
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      headers: { "Content-Type": 7 },
+    },
+  })).toBe(false);
+
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      headers: { "": "text/html" },
+    },
+  })).toBe(false);
+});
+
 test("rejects malformed scan metadata in success responses", () => {
   expect(isScanSuccessResponse({
     status: "success",
