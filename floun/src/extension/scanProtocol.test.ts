@@ -36,25 +36,27 @@ const payload: ScanPayload = {
   },
 };
 
-test("builds and validates scan targets from web URLs", () => {
+test("builds sanitized scan targets from web URLs", () => {
   expect(buildScanTarget("https://example.com/path?query=1", 7)).toEqual({
     tabId: 7,
     protocol: "https:",
     hostname: "example.com",
     pageOrigin: "https://example.com",
-    url: "https://example.com/path?query=1",
+    url: "https://example.com/path",
   });
-  expect(buildScanTarget("https://user:pass@example.com/path?query=1", 7)).toEqual({
+  expect(buildScanTarget("https://user:pass@example.com/path?access_token=secret#token=secret", 7)).toEqual({
     tabId: 7,
     protocol: "https:",
     hostname: "example.com",
     pageOrigin: "https://example.com",
-    url: "https://example.com/path?query=1",
+    url: "https://example.com/path",
   });
 
   expect(isValidScanTarget(target)).toBe(true);
   expect(isValidScanTarget({ ...target, url: "" })).toBe(false);
   expect(isValidScanTarget({ ...target, url: "https://user:pass@example.com/path" })).toBe(false);
+  expect(isValidScanTarget({ ...target, url: "https://example.com/path?access_token=secret" })).toBe(false);
+  expect(isValidScanTarget({ ...target, url: "https://example.com/path#token=secret" })).toBe(false);
   expect(isValidScanTarget({ ...target, hostname: "other.example" })).toBe(false);
   expect(isValidScanTarget({ ...target, pageOrigin: "https://other.example" })).toBe(false);
   expect(isValidScanTarget({ ...target, protocol: "http:" })).toBe(false);

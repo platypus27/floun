@@ -92,6 +92,8 @@ const stripUrlCredentials = (url: URL): URL => {
   const sanitizedUrl = new URL(url.href);
   sanitizedUrl.username = "";
   sanitizedUrl.password = "";
+  sanitizedUrl.search = "";
+  sanitizedUrl.hash = "";
 
   return sanitizedUrl;
 };
@@ -147,6 +149,8 @@ export function isValidScanTarget(target: unknown): target is ScanTarget {
     ["http:", "https:"].includes(candidate.protocol) &&
     parsedUrl.username === "" &&
     parsedUrl.password === "" &&
+    parsedUrl.search === "" &&
+    parsedUrl.hash === "" &&
     candidate.protocol === parsedUrl.protocol &&
     candidate.protocol === parsedOrigin.protocol &&
     candidate.hostname.length > 0 &&

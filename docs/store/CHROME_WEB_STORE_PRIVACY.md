@@ -16,7 +16,7 @@ Floun provides lightweight, on-demand crypto-readiness and migration signal scan
 
 ## Data Use Disclosure
 
-Floun processes the active tab URL, hostname, visible page metadata, same-origin script text, and browser-visible token candidates that match local heuristics. Token evidence is redacted before display in reports.
+Floun processes the active tab URL locally to build scan target metadata, stripping credentials, query strings, and fragments before the target is sent to the background worker. It also processes the active tab hostname, visible page metadata, same-origin script text, and browser-visible token candidates that match local heuristics. Token evidence is redacted before display in reports.
 
 Floun sends the scanned hostname to SSL Labs and ssl-checker.io for TLS and certificate metadata. It does not sell user data, use it for advertising, or transfer raw token values to those services.
 
