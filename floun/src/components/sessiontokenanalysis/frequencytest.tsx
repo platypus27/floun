@@ -1,17 +1,7 @@
-interface TokenData {
-    token: string;
-}
+import type { LegacyTokenCheckResult, SingleTokenData } from "./tokenCheck";
 
-interface TestResult {
-    passed: boolean;
-    message: string;
-    details?: string;
-    vulnerabilities?: string[];
-    frequencyAnalysis?: { [char: string]: number }; 
-}
-
-const FrequencyTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
-    const runTest = (): TestResult => {
+const FrequencyTest = ({ tokenData }: { tokenData: SingleTokenData }): LegacyTokenCheckResult => {
+    const runTest = (): LegacyTokenCheckResult => {
         const token = tokenData.token;
 
         if (!token || token === "No tokens found") {

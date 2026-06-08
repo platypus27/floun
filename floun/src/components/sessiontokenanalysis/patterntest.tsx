@@ -1,17 +1,13 @@
-interface TokenData {
-    token: string | string[];
-}
+import type { BatchTokenData, LegacyTokenCheckResult } from "./tokenCheck";
 
-interface TestResult {
-    passed: boolean;
-    message: string;
-    details?: string;
-    pattern?: string;
-    vulnerabilities?: string[];
-}
-
-const PatternTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
-    const runTest = (): TestResult => {
+const PatternTest = ({
+    tokenData,
+    mode = "single",
+}: {
+    tokenData: BatchTokenData;
+    mode?: "single" | "batch";
+}): LegacyTokenCheckResult => {
+    const runTest = (): LegacyTokenCheckResult => {
         const { token } = tokenData;
 
         // Convert `token` to an array if it's a string
@@ -21,15 +17,23 @@ const PatternTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
             return { passed: false, message: "No tokens found", details: "Missing" };
         }
 
-        // Run checks if multiple tokens are provided
-        if (tokenArray.length > 1) {
+        if (mode === "batch") {
+            if (tokenArray.length < 2) {
+                return { passed: true, message: "Batch token pattern check requires multiple tokens.", details: "Needs Multiple Tokens" };
+            }
+
             const prefixSuffix = checkForCommonPrefixSuffix(tokenArray);
             if (prefixSuffix) {
                 return prefixSuffix;
             }
+
+            return {
+                passed: true,
+                message: "No cross-token prefix or suffix pattern detected.",
+                details: "No Batch Patterns",
+            };
         }
 
-        // If no patterns are found in multiple tokens, then analyze individual tokens
         for (let singleToken of tokenArray) {
             const tokenParts = singleToken.split(".");
             if (tokenParts.length === 3) {
@@ -54,7 +58,7 @@ const PatternTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
     };
 
     // Improved check for sequential patterns
-    function checkForSequentialPatterns(token: string): TestResult | null {
+    function checkForSequentialPatterns(token: string): LegacyTokenCheckResult | null {
         const sequenceLength = 5;
 
         for (let i = 0; i <= token.length - sequenceLength; i++) {
@@ -91,7 +95,7 @@ const PatternTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
     }
 
     // Improved repetitive pattern check
-    function checkForRepetitivePatterns(token: string): TestResult | null {
+    function checkForRepetitivePatterns(token: string): LegacyTokenCheckResult | null {
         const patternLength = 5; // Adjust if needed
 
         for (let i = 0; i <= token.length - 2 * patternLength; i++) {
@@ -110,7 +114,7 @@ const PatternTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
     }
 
     // Multiple token checks remain unchanged
-    function checkForCommonPrefixSuffix(tokens: string[]): TestResult | null {
+    function checkForCommonPrefixSuffix(tokens: string[]): LegacyTokenCheckResult | null {
         const tokenLengthThreshold = 0.8; // Adjust as needed
 
         let commonPrefix = "";

@@ -1,32 +1,11 @@
-interface TokenData {
-    token: string;
-    timestamp?: number;
-    source?: string;
-    cookieName?: string;
-    httpOnly?: boolean;
-    secure?: boolean;
-    sameSite?: string;
-    headerName?: string;
-    storageKey?: string;
-}
-
-interface TestResult {
-    passed: boolean;
-    message: string;
-    details?: string;
-    format?: string;
-    jwtHeader?: string;
-    jwtPayload?: string;
-    jwtAlgorithm?: string;
-    vulnerabilities?: string[];
-}
+import type { LegacyTokenCheckResult, SingleTokenData } from "./tokenCheck";
 
 const getErrorMessage = (error: unknown): string => (
     error instanceof Error ? error.message : "Unknown parsing error"
 );
 
-const FormatTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
-    const runTest = (): TestResult => {
+const FormatTest = ({ tokenData }: { tokenData: SingleTokenData }): LegacyTokenCheckResult => {
+    const runTest = (): LegacyTokenCheckResult => {
         const { token } = tokenData;
 
         if (!token || token === "No tokens found") {

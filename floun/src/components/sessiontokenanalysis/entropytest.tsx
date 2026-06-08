@@ -1,24 +1,8 @@
 import { entropy } from './utils/entropy';
+import type { LegacyTokenCheckResult, SingleTokenData } from "./tokenCheck";
 
-interface TokenData {
-  token: string;
-  timestamp?: number;
-  source?: string;
-  cookieName?: string;
-  httpOnly?: boolean;
-  secure?: boolean;
-  sameSite?: string;
-  headerName?: string;
-}
-
-interface TestResult {
-  passed: boolean;
-  message: string;
-  vulnerabilities?: string[];
-}
-
-const EntropyTest = ({ tokenData }: { tokenData: TokenData }): TestResult => {
-  const runTest = (): TestResult => {
+const EntropyTest = ({ tokenData }: { tokenData: SingleTokenData }): LegacyTokenCheckResult => {
+  const runTest = (): LegacyTokenCheckResult => {
     const token = tokenData.token;
 
     if (!token || token === "No tokens found") {
