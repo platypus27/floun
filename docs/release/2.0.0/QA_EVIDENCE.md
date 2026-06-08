@@ -32,6 +32,7 @@ Required archive entries:
 Artifact safety checks:
 
 - Canonical and alias zips have matching SHA-256 hashes.
+- ZIP entries are unique and use safe relative paths without drive letters, absolute paths, duplicate normalized names, or `.` / `..` path segments.
 - Packaged manifest is MV3, version `2.0.0`, uses only `activeTab` and `scripting`, uses only SSL Labs / ssl-checker host permissions, keeps `background.js` as a module worker, declares `script-src 'self'; object-src 'self';` for extension pages, and has no `content_scripts`.
 - Packaged manifest, popup HTML, and background worker references resolve to entries present inside the release ZIP; packaged `src` / `href` references cannot point to remote, data, Chrome, or mailto URLs; packaged popup HTML cannot contain inline scripts or inline event handlers.
 - No `.env` entries.
@@ -52,13 +53,13 @@ Artifact safety checks:
 | `npm run release:artifact` | Pass | Verifies both release zips and matching SHA-256. |
 | `npm run store:check` | Pass | Store docs and PNG dimensions verified. |
 | deterministic packaging check | Pass | Two consecutive package runs produced matching SHA-256: `6f47657ae4e5695a1fdfcff49cbe833936e9927d3baf57e993d9baed35e617c7`. |
-| `npm test` | Pass | 26 test files, 92 tests. |
+| `npm test` | Pass | 26 test files, 93 tests. |
 | publish readiness gate tests | Pass | `release:publish:check` is covered to fail while Manual Chrome QA rows remain blocked, reject missing required scenarios, reject placeholder Pass evidence, and pass with complete required manual QA evidence. |
 | report redaction pipeline tests | Pass | `createReport` fallback and Gemini prompt paths omit raw token evidence before PDF generation. |
 | scan client runtime-error tests | Pass | Active-tab query and background-message Chrome runtime errors surface their actual messages. |
 | page collector and adapter normalization tests | Pass | Missing, primitive, malformed error, malformed object page collector callback data, credential/query/fragment-bearing script locations, oversized script payloads, and oversized token payloads are bounded or sanitized before findings or reports receive the page payload. |
 | scan protocol runtime-guard tests | Pass | New scan targets are minimized to origin-only URLs, and negative tab IDs, path/credential/query/fragment-bearing target URLs, oversized token facts, malformed page headers, normalized TLS facts, certificate facts, adapter metadata, and warning arrays are rejected before adapters run or the popup accepts a success response. |
-| QA evidence consistency tests | Pass | `release:artifact` rejects stale QA evidence hashes, sizes, archive entry lists, packaged manifest CSP drift, remote/data packaged references, inline HTML execution, source map references, and external CSS references before release readiness can pass. |
+| QA evidence consistency tests | Pass | `release:artifact` rejects stale QA evidence hashes, sizes, archive entry lists, duplicate or unsafe ZIP entry names, packaged manifest CSP drift, remote/data packaged references, inline HTML execution, source map references, and external CSS references before release readiness can pass. |
 | store readiness version tests | Pass | `store:check` derives the release evidence directory from `package.json` so future version changes cannot keep checking stale release docs. |
 | `npm run build` | Pass | Production Vite build. |
 | `npm audit --omit=dev` | Pass | 0 vulnerabilities. |

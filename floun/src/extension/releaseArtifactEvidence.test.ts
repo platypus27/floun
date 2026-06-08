@@ -76,4 +76,12 @@ test("release artifact check rejects external CSS references", () => {
   expect(script).toContain("url\\(");
 });
 
+test("release artifact check rejects duplicate or unsafe zip entries", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("Release artifact contains duplicate entry");
+  expect(script).toContain("Release artifact contains unsafe entry name");
+  expect(script).toContain("Assert-ZipEntryNamesAreSafe");
+});
+
 export {};

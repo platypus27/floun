@@ -150,6 +150,33 @@ function Assert-ZipEntryExists {
   }
 }
 
+function Assert-ZipEntryNamesAreSafe {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string[]] $NormalizedEntries
+  )
+
+  $Seen = @{}
+
+  foreach ($EntryName in $NormalizedEntries) {
+    if (
+      -not $EntryName -or
+      $EntryName.StartsWith("/") -or
+      $EntryName -match "^[A-Za-z]:" -or
+      $EntryName -match "(^|/)(?:\.|\.\.)(/|$)" -or
+      $EntryName -match "//"
+    ) {
+      throw "Release artifact contains unsafe entry name: $EntryName"
+    }
+
+    if ($Seen.ContainsKey($EntryName)) {
+      throw "Release artifact contains duplicate entry: $EntryName"
+    }
+
+    $Seen[$EntryName] = $true
+  }
+}
+
 function Assert-PackagedIndexReferences {
   param(
     [Parameter(Mandatory = $true)]
@@ -318,6 +345,7 @@ function Test-ReleaseZip {
 
   try {
     $NormalizedEntries = @($Zip.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
+    Assert-ZipEntryNamesAreSafe -NormalizedEntries $NormalizedEntries
 
     foreach ($RequiredEntry in $RequiredEntries) {
       if ($NormalizedEntries -notcontains $RequiredEntry) {
