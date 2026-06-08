@@ -33,7 +33,7 @@ Artifact safety checks:
 
 - Canonical and alias zips have matching SHA-256 hashes.
 - Packaged manifest is MV3, version `2.0.0`, uses only `activeTab` and `scripting`, uses only SSL Labs / ssl-checker host permissions, keeps `background.js` as a module worker, declares `script-src 'self'; object-src 'self';` for extension pages, and has no `content_scripts`.
-- Packaged manifest, popup HTML, and background worker references resolve to entries present inside the release ZIP.
+- Packaged manifest, popup HTML, and background worker references resolve to entries present inside the release ZIP; packaged `src` / `href` references cannot point to remote, data, Chrome, or mailto URLs.
 - No `.env` entries.
 - No QA fixture HTML.
 - No raw QA fixture token values.
@@ -56,7 +56,7 @@ Artifact safety checks:
 | scan client runtime-error tests | Pass | Active-tab query and background-message Chrome runtime errors surface their actual messages. |
 | page collector and adapter normalization tests | Pass | Missing, primitive, malformed error, malformed object page collector callback data, credential/query/fragment-bearing script locations, oversized script payloads, and oversized token payloads are bounded or sanitized before findings or reports receive the page payload. |
 | scan protocol runtime-guard tests | Pass | New scan targets are minimized to origin-only URLs, and negative tab IDs, path/credential/query/fragment-bearing target URLs, oversized token facts, malformed page headers, normalized TLS facts, certificate facts, adapter metadata, and warning arrays are rejected before adapters run or the popup accepts a success response. |
-| QA evidence consistency tests | Pass | `release:artifact` rejects stale QA evidence hashes, sizes, archive entry lists, and packaged manifest CSP drift before release readiness can pass. |
+| QA evidence consistency tests | Pass | `release:artifact` rejects stale QA evidence hashes, sizes, archive entry lists, packaged manifest CSP drift, and remote/data packaged references before release readiness can pass. |
 | store readiness version tests | Pass | `store:check` derives the release evidence directory from `package.json` so future version changes cannot keep checking stale release docs. |
 | `npm run build` | Pass | Production Vite build. |
 | `npm audit --omit=dev` | Pass | 0 vulnerabilities. |

@@ -47,4 +47,11 @@ test("release artifact check enforces packaged manifest CSP", () => {
   expect(script).toContain("Packaged manifest extension_pages CSP");
 });
 
+test("release artifact check rejects remote or data packaged references", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("Release artifact contains forbidden external or data reference");
+  expect(script).not.toContain('return $null');
+});
+
 export {};

@@ -115,7 +115,7 @@ function Convert-ToZipEntryPath {
   $Path = ($Reference -replace "[?#].*$", "").Trim()
 
   if ($Path -match "^(?:https?|data|chrome|mailto):") {
-    return $null
+    throw "Release artifact contains forbidden external or data reference: $Reference"
   }
 
   $Path = $Path.TrimStart("/")
