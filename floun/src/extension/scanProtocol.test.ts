@@ -50,6 +50,10 @@ test("builds and validates scan targets from web URLs", () => {
   expect(isValidScanTarget({ ...target, hostname: "other.example" })).toBe(false);
   expect(isValidScanTarget({ ...target, pageOrigin: "https://other.example" })).toBe(false);
   expect(isValidScanTarget({ ...target, protocol: "http:" })).toBe(false);
+  expect(isValidScanTarget({ ...target, tabId: -1 })).toBe(false);
+  expect(() => buildScanTarget("https://example.com/path", -1)).toThrow(
+    "Floun can scan HTTP and HTTPS tabs only."
+  );
   expect(() => buildScanTarget("file:///C:/tmp/page.html", 7)).toThrow(
     "Floun can scan HTTP and HTTPS tabs only."
   );
@@ -63,7 +67,9 @@ test("builds scan requests and rejects invalid target shapes", () => {
   expect(isScanActionMessage({ action: SCAN_WEBSITE_ACTION, target: {} })).toBe(true);
   expect(isScanRequest({ action: SCAN_WEBSITE_ACTION, target })).toBe(true);
   expect(isScanRequest({ action: SCAN_WEBSITE_ACTION, target: {} })).toBe(false);
+  expect(isScanRequest({ action: SCAN_WEBSITE_ACTION, target: { ...target, tabId: -1 } })).toBe(false);
   expect(() => buildScanRequest({ ...target, hostname: "" })).toThrow(INVALID_SCAN_TARGET_MESSAGE);
+  expect(() => buildScanRequest({ ...target, tabId: -1 })).toThrow(INVALID_SCAN_TARGET_MESSAGE);
 });
 
 test("builds and validates scan responses", () => {

@@ -25,6 +25,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> => (
   Boolean(value) && typeof value === "object" && !Array.isArray(value)
 );
 
+const isValidTabId = (value: unknown): value is number => (
+  typeof value === "number" && Number.isInteger(value) && value >= 0
+);
+
 const isStringArray = (value: unknown): value is string[] => (
   Array.isArray(value) && value.every(item => typeof item === "string")
 );
@@ -100,7 +104,7 @@ const isScanPayload = (value: unknown): value is ScanPayload => {
 export function buildScanTarget(url: string, tabId: number): ScanTarget {
   const parsedUrl = new URL(url);
 
-  if (!Number.isInteger(tabId) || !["http:", "https:"].includes(parsedUrl.protocol) || !parsedUrl.hostname) {
+  if (!isValidTabId(tabId) || !["http:", "https:"].includes(parsedUrl.protocol) || !parsedUrl.hostname) {
     throw new Error("Floun can scan HTTP and HTTPS tabs only.");
   }
 
@@ -118,7 +122,7 @@ export function isValidScanTarget(target: unknown): target is ScanTarget {
 
   if (
     !candidate ||
-    !Number.isInteger(candidate.tabId) ||
+    !isValidTabId(candidate.tabId) ||
     typeof candidate.protocol !== "string" ||
     typeof candidate.hostname !== "string"
   ) {
