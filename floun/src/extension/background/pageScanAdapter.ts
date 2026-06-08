@@ -4,10 +4,14 @@ import type { PageScanData, ScanAdapterResult } from "../scanTypes";
 
 const emptyPageScan = (): PageScanData => ({ tokens: [], headers: {}, jsScripts: [] });
 const malformedPageDataMessage = "Page collector returned malformed data.";
+const truncatedPageDataMessage = "Page collector returned truncated script data.";
+const maxScriptCount = 50;
+const maxScriptContentLength = 50_000;
 
 interface NormalizedPageScanResult {
   data: PageScanData;
   malformed: boolean;
+  truncated: boolean;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -93,31 +97,40 @@ const sanitizeScriptSrc = (src: unknown): string | undefined => {
   }
 };
 
-const normalizeScripts = (scripts: unknown): { values: unknown[]; malformed: boolean } => {
+const normalizeScripts = (scripts: unknown): { values: unknown[]; malformed: boolean; truncated: boolean } => {
   if (!Array.isArray(scripts)) {
-    return { values: [], malformed: true };
+    return { values: [], malformed: true, truncated: false };
   }
 
   let malformed = false;
-  const values = scripts.flatMap(script => {
+  let truncated = scripts.length > maxScriptCount;
+  const values = scripts.slice(0, maxScriptCount).flatMap(script => {
     if (!isRecord(script) || typeof script.content !== "string") {
       malformed = true;
       return [];
     }
 
+    const content = script.content.length > maxScriptContentLength
+      ? script.content.slice(0, maxScriptContentLength)
+      : script.content;
+
+    if (content.length !== script.content.length) {
+      truncated = true;
+    }
+
     return [{
       type: typeof script.type === "string" ? script.type : undefined,
       src: sanitizeScriptSrc(script.src),
-      content: script.content,
+      content,
     }];
   });
 
-  return { values, malformed };
+  return { values, malformed, truncated };
 };
 
 function normalizePageScanResult(result: unknown): NormalizedPageScanResult {
   if (!isRecord(result)) {
-    return { data: emptyPageScan(), malformed: true };
+    return { data: emptyPageScan(), malformed: true, truncated: false };
   }
 
   const tokens = normalizeTokens(result.tokens);
@@ -131,6 +144,7 @@ function normalizePageScanResult(result: unknown): NormalizedPageScanResult {
       jsScripts: jsScripts.values,
     },
     malformed: tokens.malformed || headers.malformed || jsScripts.malformed,
+    truncated: result.truncated === true || jsScripts.truncated,
   };
 }
 
@@ -173,7 +187,9 @@ export function executePageScan(
           data: normalizedResult.data,
           meta: normalizedResult.malformed
             ? partialMeta(malformedPageDataMessage)
-            : completeMeta(),
+            : normalizedResult.truncated
+              ? partialMeta(truncatedPageDataMessage)
+              : completeMeta(),
         });
       }
     );

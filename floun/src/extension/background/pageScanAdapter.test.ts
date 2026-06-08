@@ -116,3 +116,25 @@ test("strips credentials, query strings, and fragments from external script src 
     meta: { status: "complete" },
   });
 });
+
+test("caps oversized script payloads and marks page scans partial", async () => {
+  stubChromeWithResult({
+    tokens: [],
+    headers: {},
+    jsScripts: Array.from({ length: 55 }, (_value, index) => ({
+      type: "inline",
+      content: `${"A".repeat(60_000)}MD5(${index})`,
+    })),
+  });
+
+  const result = await executePageScan(7, "https://example.com");
+  const firstScript = result.data.jsScripts[0] as { content: string };
+
+  expect(result.data.jsScripts).toHaveLength(50);
+  expect(firstScript.content).toHaveLength(50_000);
+  expect(firstScript.content).not.toContain("MD5(0)");
+  expect(result.meta).toEqual({
+    status: "partial",
+    message: "Page collector returned truncated script data.",
+  });
+});
