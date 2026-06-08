@@ -61,4 +61,11 @@ test("release artifact check rejects inline HTML execution", () => {
   expect(script).toContain("Packaged index.html must not contain inline event handlers.");
 });
 
+test("release artifact check rejects source map references", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("Release artifact contains forbidden source map reference");
+  expect(script).toContain("sourceMappingURL");
+});
+
 export {};

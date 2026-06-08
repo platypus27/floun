@@ -401,6 +401,10 @@ function Test-ReleaseZip {
         }
       }
 
+      if ($Content -match '(?im)(?://[#@]\s*sourceMappingURL\s*=|/\*[#@]\s*sourceMappingURL\s*=)') {
+        throw "Release artifact contains forbidden source map reference in $EntryName"
+      }
+
       if ($Content -match $GeminiKeyPattern) {
         throw "Release artifact contains a Gemini API-key-like value in $EntryName"
       }
