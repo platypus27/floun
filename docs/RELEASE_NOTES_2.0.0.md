@@ -23,6 +23,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Validated packaged manifest, popup HTML, and background worker asset references directly inside the release ZIP artifact.
 - Validated release QA evidence against the packaged ZIP hash, size, and archive entries to prevent stale release documentation.
 - Derived store readiness release evidence paths from `package.json` so future version changes cannot keep checking stale release docs.
+- Added a publish readiness gate that fails until Manual Chrome QA evidence rows are completed and marked Pass.
 - Added automated report pipeline checks proving raw token evidence is omitted before PDF generation and Gemini prompt drafting.
 - Expanded release artifact safety checks to reject raw QA fixture tokens and source/test/dev files in the packaged ZIP.
 - Hardened popup scan-client error handling for Chrome active-tab query and background-message runtime failures.
@@ -56,6 +57,8 @@ git diff --check
 
 The package artifacts are written to `floun/release/floun-2.0.0.zip` and byte-identical alias `floun/release/floun-2.0.zip`.
 Chrome Web Store prep material lives under `docs/store/`.
+
+`npm run release:publish:check` is intentionally stricter than the scripted release-prep checks. It runs release readiness and then fails until every Manual Chrome QA evidence row is marked Pass.
 
 ## Manual QA Targets
 
