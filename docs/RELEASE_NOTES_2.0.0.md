@@ -28,6 +28,7 @@ Run from `floun/`:
 npm run release:check
 npm run package:extension
 npm run release:artifact
+npm run release:determinism
 npm run store:check
 npm run release:ready
 npm test

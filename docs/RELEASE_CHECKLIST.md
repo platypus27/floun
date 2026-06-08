@@ -23,6 +23,7 @@ npm run audit:prod
 npm run typecheck
 npm run check:worker
 npm run release:artifact
+npm run release:determinism
 npm run store:check
 ```
 

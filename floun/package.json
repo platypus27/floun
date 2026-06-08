@@ -22,8 +22,9 @@
     "fixture:server": "vite fixtures --host 127.0.0.1 --port 4174",
     "package:extension": "npm run release:check && powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/package-extension.ps1",
     "release:artifact": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/check-release-artifact.ps1",
+    "release:determinism": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/check-package-determinism.ps1",
     "store:check": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/check-store-readiness.ps1",
-    "release:ready": "npm run package:extension && npm run release:artifact && npm run store:check"
+    "release:ready": "npm run package:extension && npm run release:artifact && npm run release:determinism && npm run store:check"
   },
   "browserslist": {
     "production": [
