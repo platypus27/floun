@@ -40,7 +40,7 @@ const FormatTest = ({ tokenData }: { tokenData: SingleTokenData }): LegacyTokenC
             };
         }
 
-        // 1. JWT Check with Vulnerability Analysis
+        // 1. JWT heuristic review
         const parts = token.split('.');
         if (parts.length === 3) {
             const [headerB64u, payloadB64u] = parts;

@@ -16,6 +16,8 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Added repeatable release-candidate scripts, a Windows-first PowerShell packager, and an HTTP-served QA fixture.
 - Added release-readiness checks, QA evidence docs, Chrome Web Store listing/privacy copy, and required store asset files.
 - Added fixture-driven analyzer calibration coverage and refreshed byte-identical `2.0.0` / `2.0` release zips from the current source.
+- Tightened scan request validation so URL, origin, protocol, and hostname must agree before background adapters run.
+- Removed unused future-domain analysis placeholders from the release source tree.
 
 ## Verification Commands
 

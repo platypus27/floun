@@ -66,7 +66,7 @@ export async function createReport(
 
   await generatePDFReport({
     title: "Quantum Safe Cryptography Report",
-    subtitle: "Identifying and Mitigating Cryptographic Vulnerabilities",
+    subtitle: "Reviewing Crypto-Readiness and Migration Signals",
     date: new Date().toLocaleDateString(),
     confidentialityNotice: "Confidential - For Internal Use Only",
   }, buildReportContent(groups, sections, groupLabels));

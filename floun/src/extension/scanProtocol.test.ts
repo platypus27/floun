@@ -47,6 +47,9 @@ test("builds and validates scan targets from web URLs", () => {
 
   expect(isValidScanTarget(target)).toBe(true);
   expect(isValidScanTarget({ ...target, url: "" })).toBe(false);
+  expect(isValidScanTarget({ ...target, hostname: "other.example" })).toBe(false);
+  expect(isValidScanTarget({ ...target, pageOrigin: "https://other.example" })).toBe(false);
+  expect(isValidScanTarget({ ...target, protocol: "http:" })).toBe(false);
   expect(() => buildScanTarget("file:///C:/tmp/page.html", 7)).toThrow(
     "Floun can scan HTTP and HTTPS tabs only."
   );

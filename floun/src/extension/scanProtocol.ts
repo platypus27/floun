@@ -25,6 +25,18 @@ const isRecord = (value: unknown): value is Record<string, unknown> => (
   Boolean(value) && typeof value === "object" && !Array.isArray(value)
 );
 
+const parseUrl = (value: unknown): URL | null => {
+  if (typeof value !== "string" || value.length === 0) {
+    return null;
+  }
+
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+};
+
 const isScanPayload = (value: unknown): value is ScanPayload => {
   if (!isRecord(value)) {
     return false;
@@ -57,16 +69,29 @@ export function buildScanTarget(url: string, tabId: number): ScanTarget {
 export function isValidScanTarget(target: unknown): target is ScanTarget {
   const candidate = target as ScanTarget | null;
 
+  if (
+    !candidate ||
+    !Number.isInteger(candidate.tabId) ||
+    typeof candidate.protocol !== "string" ||
+    typeof candidate.hostname !== "string"
+  ) {
+    return false;
+  }
+
+  const parsedUrl = parseUrl(candidate.url);
+  const parsedOrigin = parseUrl(candidate.pageOrigin);
+
   return Boolean(
-    candidate &&
-    Number.isInteger(candidate.tabId) &&
+    parsedUrl &&
+    parsedOrigin &&
     ["http:", "https:"].includes(candidate.protocol) &&
-    typeof candidate.hostname === "string" &&
+    candidate.protocol === parsedUrl.protocol &&
+    candidate.protocol === parsedOrigin.protocol &&
     candidate.hostname.length > 0 &&
-    typeof candidate.pageOrigin === "string" &&
-    candidate.pageOrigin.length > 0 &&
-    typeof candidate.url === "string" &&
-    candidate.url.length > 0
+    candidate.hostname === parsedUrl.hostname &&
+    candidate.hostname === parsedOrigin.hostname &&
+    candidate.pageOrigin === parsedUrl.origin &&
+    candidate.pageOrigin === parsedOrigin.origin
   );
 }
 
