@@ -68,6 +68,7 @@ $ExpectedHostPermissions = @(
   "https://api.ssllabs.com/*",
   "https://ssl-checker.io/*"
 )
+$ExpectedExtensionPagesCsp = "script-src 'self'; object-src 'self';"
 
 function Assert-StringSet {
   param(
@@ -347,6 +348,10 @@ function Test-ReleaseZip {
 
     if ($Manifest.background.type -ne "module") {
       throw "Packaged manifest background worker must be a module."
+    }
+
+    if ($Manifest.content_security_policy.extension_pages -ne $ExpectedExtensionPagesCsp) {
+      throw "Packaged manifest extension_pages CSP must be $ExpectedExtensionPagesCsp."
     }
 
     Assert-PackagedManifestReferences -Manifest $Manifest -NormalizedEntries $NormalizedEntries

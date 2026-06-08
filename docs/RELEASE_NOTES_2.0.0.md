@@ -20,6 +20,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Removed unused future-domain analysis placeholders from the release source tree.
 - Made release ZIP packaging deterministic so repeated packaging of unchanged build output preserves the artifact hash.
 - Validated packaged manifest permissions and background worker settings directly inside the release ZIP artifact.
+- Added an explicit extension-page CSP and packaged-manifest validation for self-only scripts and objects.
 - Validated packaged manifest, popup HTML, and background worker asset references directly inside the release ZIP artifact.
 - Validated release QA evidence against the packaged ZIP hash, size, and archive entries to prevent stale release documentation.
 - Derived store readiness release evidence paths from `package.json` so future version changes cannot keep checking stale release docs.

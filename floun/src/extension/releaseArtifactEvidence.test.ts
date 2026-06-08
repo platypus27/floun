@@ -39,4 +39,12 @@ test("release artifact check rejects stale QA evidence", () => {
   }
 }, 30000);
 
+test("release artifact check enforces packaged manifest CSP", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("$ExpectedExtensionPagesCsp = \"script-src 'self'; object-src 'self';\"");
+  expect(script).toContain("$Manifest.content_security_policy.extension_pages");
+  expect(script).toContain("Packaged manifest extension_pages CSP");
+});
+
 export {};
