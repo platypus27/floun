@@ -84,4 +84,12 @@ test("release artifact check rejects duplicate or unsafe zip entries", () => {
   expect(script).toContain("Assert-ZipEntryNamesAreSafe");
 });
 
+test("release artifact check enforces packaged manifest key allowlist", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("Packaged manifest contains unexpected top-level key");
+  expect(script).toContain("Assert-PackagedManifestKeysAreExpected");
+  expect(script).toContain("$ExpectedManifestTopLevelKeys");
+});
+
 export {};

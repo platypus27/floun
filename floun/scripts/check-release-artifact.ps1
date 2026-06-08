@@ -69,6 +69,18 @@ $ExpectedHostPermissions = @(
   "https://ssl-checker.io/*"
 )
 $ExpectedExtensionPagesCsp = "script-src 'self'; object-src 'self';"
+$ExpectedManifestTopLevelKeys = @(
+  "action",
+  "background",
+  "content_security_policy",
+  "description",
+  "host_permissions",
+  "icons",
+  "manifest_version",
+  "name",
+  "permissions",
+  "version"
+)
 
 function Assert-StringSet {
   param(
@@ -263,6 +275,19 @@ function Assert-PackagedManifestReferences {
   }
 }
 
+function Assert-PackagedManifestKeysAreExpected {
+  param(
+    [Parameter(Mandatory = $true)]
+    $Manifest
+  )
+
+  foreach ($Key in @($Manifest.PSObject.Properties.Name)) {
+    if ($ExpectedManifestTopLevelKeys -notcontains $Key) {
+      throw "Packaged manifest contains unexpected top-level key: $Key"
+    }
+  }
+}
+
 function Assert-ContentContains {
   param(
     [Parameter(Mandatory = $true)]
@@ -369,6 +394,7 @@ function Test-ReleaseZip {
 
     $ManifestEntry = $Zip.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "manifest.json" } | Select-Object -First 1
     $Manifest = Read-ZipEntryText -Entry $ManifestEntry | ConvertFrom-Json
+    Assert-PackagedManifestKeysAreExpected -Manifest $Manifest
 
     if ($Manifest.manifest_version -ne 3) {
       throw "Packaged manifest must use manifest_version 3."
