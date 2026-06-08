@@ -24,6 +24,7 @@ interface ChromeRuntimeAssetApi {
 const pageSize: [number, number] = [600, 800];
 const margin = 50;
 const bodyFontSize = 12;
+const defaultReportLogoAssetPath = "icons/icon_128.png";
 
 const sectionDefinitions: Array<[string, keyof ReportContent]> = [
   ["1. Introduction", "introduction"],
@@ -134,7 +135,7 @@ async function drawCoverPage(
 
 async function loadDefaultLogoBase64(): Promise<string | null> {
   try {
-    const response = await fetch(resolveReportAssetUrl("icons/floun.png"));
+    const response = await fetch(resolveDefaultReportLogoAssetUrl());
 
     if (!response.ok) {
       return null;
@@ -144,6 +145,12 @@ async function loadDefaultLogoBase64(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+export function resolveDefaultReportLogoAssetUrl(
+  chromeApi?: ChromeRuntimeAssetApi
+): string {
+  return resolveReportAssetUrl(defaultReportLogoAssetPath, chromeApi);
 }
 
 export function resolveReportAssetUrl(
@@ -173,19 +180,23 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 async function embedLogo(pdfDoc: PDFDocument, rawLogoData: string | null) {
-  if (!rawLogoData) {
+  try {
+    if (!rawLogoData) {
+      return null;
+    }
+
+    if (rawLogoData.startsWith("data:image/png;base64,")) {
+      return await pdfDoc.embedPng(rawLogoData.split(",")[1]);
+    }
+
+    if (rawLogoData.startsWith("data:image/jpeg;base64,")) {
+      return await pdfDoc.embedJpg(rawLogoData.split(",")[1]);
+    }
+
+    return null;
+  } catch {
     return null;
   }
-
-  if (rawLogoData.startsWith("data:image/png;base64,")) {
-    return pdfDoc.embedPng(rawLogoData.split(",")[1]);
-  }
-
-  if (rawLogoData.startsWith("data:image/jpeg;base64,")) {
-    return pdfDoc.embedJpg(rawLogoData.split(",")[1]);
-  }
-
-  return null;
 }
 
 function addSection(pdfDoc: PDFDocument, heading: string, text: string, fonts: PdfFonts): void {
