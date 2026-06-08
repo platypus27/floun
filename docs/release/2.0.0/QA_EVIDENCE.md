@@ -1,6 +1,6 @@
 # Floun 2.0.0 QA Evidence
 
-Status: scripted release-prep and hardening audit checks passed on June 8, 2026; Chrome extension manual QA remains blocked and must be completed manually or with Chrome for Testing / Chromium before tag, push, Chrome Web Store upload, or publication.
+Status: scripted release-prep and hardening audit checks passed on June 8, 2026; unpacked extension-load QA passed with Chrome for Testing, but popup scan and PDF Chrome QA remain blocked and must be completed before tag, push, Chrome Web Store upload, or publication.
 
 ## Artifact Evidence
 
@@ -54,6 +54,7 @@ Artifact safety checks:
 | `npm run release:artifact` | Pass | Verifies both release zips and matching SHA-256. |
 | `npm run store:check` | Pass | Store docs and PNG dimensions verified. |
 | deterministic packaging check | Pass | Two consecutive package runs produced matching SHA-256: `bb4e43437bdfaf48a8f64c112d1464ec47e3bf1e6527d50b10a45e2be8ce8de3`. |
+| `npm run qa:extension:load` with Chrome for Testing | Pass | `FLOUN_CHROME_BIN=C:\Users\SASHA\AppData\Local\Codex\ChromeForTesting\149.0.7827.54\chrome-win64\chrome.exe`; verified Floun extension ID `kjlocnfdbbpibfhmhmhnpopfmjaceood`, version `2.0.0`, evidence source `runtime-manifest`. |
 | `npm test` | Pass | 28 test files, 101 tests. |
 | publish readiness gate tests | Pass | `release:publish:check` is covered to fail while Manual Chrome QA rows remain blocked, reject missing required scenarios, reject placeholder Pass evidence, and pass with complete required manual QA evidence. |
 | report redaction pipeline tests | Pass | `createReport` fallback and Gemini prompt paths omit raw token evidence before PDF generation. |
@@ -73,12 +74,13 @@ Artifact safety checks:
 ## Manual Chrome QA
 
 - Chrome version: `148.0.7778.168`
+- Chrome for Testing version: `149.0.7827.54`
 - Automation note: Codex Chrome automation connected successfully, but opening `chrome://extensions/` was blocked by the browser automation URL policy. A deeper command-line probe also showed branded Google Chrome `148.0.7778.168` ignores unpacked-extension load flags: Chrome logged `--disable-extensions-except is not allowed in Google Chrome, ignoring.` A throwaway MV3 extension failed under the same launch path, so this is a branded-Chrome automation limitation rather than a Floun manifest rejection.
-- Repeatable helper: run `npm run qa:extension:load` from `floun/` with `FLOUN_CHROME_BIN` pointing at Chrome for Testing or Chromium to verify unpacked extension loading without adding runtime dependencies. The helper is expected to fail on branded Google Chrome 148 with an actionable message because official Chrome removed command-line extension loading support.
+- Repeatable helper: `npm run qa:extension:load` passed when `FLOUN_CHROME_BIN` pointed at Chrome for Testing `149.0.7827.54`, verifying Floun from the loaded extension runtime manifest. The helper is expected to fail on branded Google Chrome 148 with an actionable message because official Chrome removed command-line extension loading support.
 
 | Scenario | Result | Evidence |
 | --- | --- | --- |
-| Load `floun/build/` in Chrome extensions | Blocked | Branded Chrome 148 ignored command-line extension-load flags and Codex automation cannot open `chrome://extensions/`; complete manually in Chrome or run `npm run qa:extension:load` with Chrome for Testing / Chromium. |
+| Load `floun/build/` in Chrome extensions | Pass | `npm run qa:extension:load` passed with Chrome for Testing `149.0.7827.54`; loaded Floun extension ID `kjlocnfdbbpibfhmhmhnpopfmjaceood`, version `2.0.0`, evidence source `runtime-manifest`. |
 | Scan `http://127.0.0.1:4174/crypto-readiness.html` | Blocked | Requires loaded extension popup; complete manually after loading `floun/build/`. |
 | Scan `https://www.cloudflare.com/` | Blocked | Requires loaded extension popup; complete manually and confirm TLS/certificate status. |
 | Scan `http://example.com/` | Blocked | Requires loaded extension popup; complete manually and confirm certificate warning is unavailable. |
