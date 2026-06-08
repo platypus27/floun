@@ -28,6 +28,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Expanded release artifact safety checks to reject raw QA fixture tokens and source/test/dev files in the packaged ZIP.
 - Hardened popup scan-client error handling for Chrome active-tab query and background-message runtime failures.
 - Hardened the page scan adapter to sanitize malformed injected collector data before it enters the scan payload.
+- Hardened page scan normalization so external script locations keep paths but drop credentials, query strings, and fragments before findings or reports are generated.
 - Hardened page collector error handling so primitive or malformed callback values become partial scan warnings rather than adapter crashes or invalid metadata.
 - Hardened scan response validation so the popup rejects malformed page headers, normalized TLS facts, certificate facts, adapter metadata, and warning arrays.
 

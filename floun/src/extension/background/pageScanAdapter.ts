@@ -75,6 +75,24 @@ const normalizeHeaders = (headers: unknown): { values: Record<string, string>; m
   return { values, malformed };
 };
 
+const sanitizeScriptSrc = (src: unknown): string | undefined => {
+  if (typeof src !== "string") {
+    return undefined;
+  }
+
+  try {
+    const scriptUrl = new URL(src.trim());
+    scriptUrl.username = "";
+    scriptUrl.password = "";
+    scriptUrl.search = "";
+    scriptUrl.hash = "";
+
+    return scriptUrl.href;
+  } catch {
+    return src.trim() || undefined;
+  }
+};
+
 const normalizeScripts = (scripts: unknown): { values: unknown[]; malformed: boolean } => {
   if (!Array.isArray(scripts)) {
     return { values: [], malformed: true };
@@ -89,7 +107,7 @@ const normalizeScripts = (scripts: unknown): { values: unknown[]; malformed: boo
 
     return [{
       type: typeof script.type === "string" ? script.type : undefined,
-      src: typeof script.src === "string" ? script.src : undefined,
+      src: sanitizeScriptSrc(script.src),
       content: script.content,
     }];
   });

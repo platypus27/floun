@@ -93,3 +93,26 @@ test("normalizes malformed page collector data instead of leaking invalid payloa
     meta: { status: "partial", message: "Page collector returned malformed data." },
   });
 });
+
+test("strips credentials, query strings, and fragments from external script src values", async () => {
+  stubChromeWithResult({
+    tokens: [],
+    headers: {},
+    jsScripts: [{
+      type: "external",
+      src: "https://user:pass@example.com/assets/app.js?access_token=secret#token",
+      content: "MD5(input)",
+    }],
+  });
+
+  await expect(executePageScan(7, "https://example.com")).resolves.toMatchObject({
+    data: {
+      jsScripts: [{
+        type: "external",
+        src: "https://example.com/assets/app.js",
+        content: "MD5(input)",
+      }],
+    },
+    meta: { status: "complete" },
+  });
+});

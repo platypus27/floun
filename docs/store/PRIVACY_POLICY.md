@@ -6,7 +6,7 @@ Floun is a lightweight Chrome extension for crypto-readiness and migration signa
 
 ## Data Floun Processes
 
-Floun may process the active tab URL locally to build scan target metadata. Target URL metadata is minimized to the tab origin before it is sent to the background worker, removing paths, credentials, query strings, and fragments. Floun may also process the active tab hostname, page metadata, same-origin JavaScript text, TLS metadata, certificate metadata, and browser-visible token candidates that match local session-token heuristics.
+Floun may process the active tab URL locally to build scan target metadata. Target URL metadata is minimized to the tab origin before it is sent to the background worker, removing paths, credentials, query strings, and fragments. Floun may also process the active tab hostname, page metadata, same-origin JavaScript text, sanitized same-origin script locations, TLS metadata, certificate metadata, and browser-visible token candidates that match local session-token heuristics.
 
 Token findings are redacted before being displayed in reports. Floun does not intentionally collect passwords, payment information, personal communications, browsing history, or files from the user's device.
 

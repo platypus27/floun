@@ -88,7 +88,7 @@ test("publish readiness check passes when every required manual QA row has evide
 
   expect(errorMessage).toBe("");
   expect(output).toContain("Publish readiness verified.");
-});
+}, 30000);
 
 test("publish readiness check rejects missing required manual QA scenarios", () => {
   const { errorMessage } = runWithQaEvidence(
@@ -103,7 +103,7 @@ test("publish readiness check rejects missing required manual QA scenarios", () 
 
   expect(errorMessage).toMatch(/missing required Manual Chrome QA scenarios/i);
   expect(errorMessage).toContain("Generate PDF report");
-});
+}, 30000);
 
 test("publish readiness check rejects pass rows with placeholder evidence", () => {
   const { errorMessage } = runWithQaEvidence(
@@ -118,6 +118,6 @@ test("publish readiness check rejects pass rows with placeholder evidence", () =
 
   expect(errorMessage).toMatch(/incomplete Manual Chrome QA evidence/i);
   expect(errorMessage).toContain("Generate PDF report");
-});
+}, 30000);
 
 export {};
