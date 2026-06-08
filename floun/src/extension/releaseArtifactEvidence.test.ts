@@ -92,4 +92,14 @@ test("release artifact check enforces packaged manifest key allowlist", () => {
   expect(script).toContain("$ExpectedManifestTopLevelKeys");
 });
 
+test("release artifact check enforces nested manifest key allowlists", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("Packaged manifest background contains unexpected key");
+  expect(script).toContain("Packaged manifest action contains unexpected key");
+  expect(script).toContain("Packaged manifest content_security_policy contains unexpected key");
+  expect(script).toContain("Packaged manifest icons contains unexpected key");
+  expect(script).toContain("$ExpectedManifestBackgroundKeys");
+});
+
 export {};

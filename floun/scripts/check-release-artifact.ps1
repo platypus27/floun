@@ -81,6 +81,10 @@ $ExpectedManifestTopLevelKeys = @(
   "permissions",
   "version"
 )
+$ExpectedManifestBackgroundKeys = @("service_worker", "type")
+$ExpectedManifestActionKeys = @("default_icon", "default_popup")
+$ExpectedManifestCspKeys = @("extension_pages")
+$ExpectedManifestIconKeys = @("16", "48", "128")
 
 function Assert-StringSet {
   param(
@@ -281,9 +285,61 @@ function Assert-PackagedManifestKeysAreExpected {
     $Manifest
   )
 
-  foreach ($Key in @($Manifest.PSObject.Properties.Name)) {
-    if ($ExpectedManifestTopLevelKeys -notcontains $Key) {
-      throw "Packaged manifest contains unexpected top-level key: $Key"
+  Assert-ObjectKeysAreExpected `
+    -Label "Packaged manifest" `
+    -Object $Manifest `
+    -ExpectedKeys $ExpectedManifestTopLevelKeys `
+    -UnexpectedMessage "Packaged manifest contains unexpected top-level key"
+
+  Assert-ObjectKeysAreExpected `
+    -Label "Packaged manifest background" `
+    -Object $Manifest.background `
+    -ExpectedKeys $ExpectedManifestBackgroundKeys `
+    -UnexpectedMessage "Packaged manifest background contains unexpected key"
+
+  Assert-ObjectKeysAreExpected `
+    -Label "Packaged manifest action" `
+    -Object $Manifest.action `
+    -ExpectedKeys $ExpectedManifestActionKeys `
+    -UnexpectedMessage "Packaged manifest action contains unexpected key"
+
+  Assert-ObjectKeysAreExpected `
+    -Label "Packaged manifest content_security_policy" `
+    -Object $Manifest.content_security_policy `
+    -ExpectedKeys $ExpectedManifestCspKeys `
+    -UnexpectedMessage "Packaged manifest content_security_policy contains unexpected key"
+
+  Assert-ObjectKeysAreExpected `
+    -Label "Packaged manifest icons" `
+    -Object $Manifest.icons `
+    -ExpectedKeys $ExpectedManifestIconKeys `
+    -UnexpectedMessage "Packaged manifest icons contains unexpected key"
+
+  Assert-ObjectKeysAreExpected `
+    -Label "Packaged manifest action default_icon" `
+    -Object $Manifest.action.default_icon `
+    -ExpectedKeys $ExpectedManifestIconKeys `
+    -UnexpectedMessage "Packaged manifest action default_icon contains unexpected key"
+}
+
+function Assert-ObjectKeysAreExpected {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $Label,
+
+    [Parameter(Mandatory = $true)]
+    $Object,
+
+    [Parameter(Mandatory = $true)]
+    [string[]] $ExpectedKeys,
+
+    [Parameter(Mandatory = $true)]
+    [string] $UnexpectedMessage
+  )
+
+  foreach ($Key in @($Object.PSObject.Properties.Name)) {
+    if ($ExpectedKeys -notcontains $Key) {
+      throw "$UnexpectedMessage`: $Key"
     }
   }
 }
