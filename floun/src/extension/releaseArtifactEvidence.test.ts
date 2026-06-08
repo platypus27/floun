@@ -102,4 +102,12 @@ test("release artifact check enforces nested manifest key allowlists", () => {
   expect(script).toContain("$ExpectedManifestBackgroundKeys");
 });
 
+test("release artifact check enforces packaged file extension allowlist", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("Release artifact contains unexpected file type");
+  expect(script).toContain("$AllowedEntryExtensions");
+  expect(script).toContain("Assert-ZipEntryFileTypesAreExpected");
+});
+
 export {};

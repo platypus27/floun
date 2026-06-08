@@ -29,6 +29,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Hardened release artifact validation to reject duplicate or unsafe ZIP entry names.
 - Hardened release artifact validation to reject unexpected packaged manifest top-level keys.
 - Hardened release artifact validation to reject unexpected nested packaged manifest keys.
+- Hardened release artifact validation to reject unexpected packaged file types.
 - Validated release QA evidence against the packaged ZIP hash, size, and archive entries to prevent stale release documentation.
 - Derived store readiness release evidence paths from `package.json` so future version changes cannot keep checking stale release docs.
 - Added a publish readiness gate that fails until every required Manual Chrome QA evidence row is present, completed, backed by non-placeholder evidence, and marked Pass.

@@ -62,6 +62,7 @@ $ForbiddenText = @(
 )
 
 $TextExtensions = @(".css", ".html", ".js", ".json", ".txt")
+$AllowedEntryExtensions = @(".css", ".html", ".ico", ".js", ".json", ".png", ".txt")
 $GeminiKeyPattern = "AIza[0-9A-Za-z_-]{20,}"
 $ExpectedPermissions = @("activeTab", "scripting")
 $ExpectedHostPermissions = @(
@@ -190,6 +191,21 @@ function Assert-ZipEntryNamesAreSafe {
     }
 
     $Seen[$EntryName] = $true
+  }
+}
+
+function Assert-ZipEntryFileTypesAreExpected {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string[]] $NormalizedEntries
+  )
+
+  foreach ($EntryName in $NormalizedEntries) {
+    $Extension = [System.IO.Path]::GetExtension($EntryName).ToLowerInvariant()
+
+    if ($AllowedEntryExtensions -notcontains $Extension) {
+      throw "Release artifact contains unexpected file type: $EntryName"
+    }
   }
 }
 
@@ -427,6 +443,7 @@ function Test-ReleaseZip {
   try {
     $NormalizedEntries = @($Zip.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
     Assert-ZipEntryNamesAreSafe -NormalizedEntries $NormalizedEntries
+    Assert-ZipEntryFileTypesAreExpected -NormalizedEntries $NormalizedEntries
 
     foreach ($RequiredEntry in $RequiredEntries) {
       if ($NormalizedEntries -notcontains $RequiredEntry) {
