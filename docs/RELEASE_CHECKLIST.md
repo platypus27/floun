@@ -25,21 +25,25 @@ npm run check:worker
 npm run release:artifact
 npm run release:determinism
 npm run store:check
+npm run qa:extension:load
 ```
+
+`npm run qa:extension:load` requires a browser that still supports command-line unpacked extension loading, such as Chrome for Testing or Chromium. If the default branded Google Chrome binary reports that extension-load flags are not allowed, set `FLOUN_CHROME_BIN` to a Chrome for Testing / Chromium `chrome.exe`, or complete the manual `chrome://extensions` load below.
 
 ## Manual Extension QA
 
 1. Run `npm run package:extension`.
-2. Load `floun/build/` in `chrome://extensions/`, or unzip `floun/release/floun-2.0.0.zip` and load the unpacked output.
-3. Start the local HTTP fixture with `npm run fixture:server`.
-4. Open `http://127.0.0.1:4174/crypto-readiness.html`.
-5. Run Scan from the popup and confirm JavaScript, Token, TLS, and Certificate sections render without console errors.
-6. Confirm the HTTP fixture reports a certificate adapter warning rather than reintroducing `file://` support or broad host permissions.
-7. Scan a known HTTPS site and confirm TLS and certificate adapters report `complete`, `partial`, or `unavailable` states clearly.
-8. Attempt unsupported extension/browser pages such as `chrome://extensions/` and confirm the popup shows a graceful error.
-9. Generate a PDF report without `REACT_APP_GEMINI_API_KEY` configured and confirm raw tokens are absent.
-10. If Gemini drafting is configured locally, confirm generated report text does not contain raw tokens, code snippets, hashes, or certificate bodies.
-11. Record the manual QA result in `docs/release/2.0.0/QA_EVIDENCE.md`.
+2. Optionally run `npm run qa:extension:load` with Chrome for Testing or Chromium to verify that the unpacked build can load through command-line QA.
+3. Load `floun/build/` in `chrome://extensions/`, or unzip `floun/release/floun-2.0.0.zip` and load the unpacked output.
+4. Start the local HTTP fixture with `npm run fixture:server`.
+5. Open `http://127.0.0.1:4174/crypto-readiness.html`.
+6. Run Scan from the popup and confirm JavaScript, Token, TLS, and Certificate sections render without console errors.
+7. Confirm the HTTP fixture reports a certificate adapter warning rather than reintroducing `file://` support or broad host permissions.
+8. Scan a known HTTPS site and confirm TLS and certificate adapters report `complete`, `partial`, or `unavailable` states clearly.
+9. Attempt unsupported extension/browser pages such as `chrome://extensions/` and confirm the popup shows a graceful error.
+10. Generate a PDF report without `REACT_APP_GEMINI_API_KEY` configured and confirm raw tokens are absent.
+11. If Gemini drafting is configured locally, confirm generated report text does not contain raw tokens, code snippets, hashes, or certificate bodies.
+12. Record the manual QA result in `docs/release/2.0.0/QA_EVIDENCE.md`.
 
 ## Chrome Web Store Prep
 

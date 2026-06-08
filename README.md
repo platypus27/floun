@@ -39,6 +39,15 @@ cd floun
 npm run release:ready
 ```
 
+For optional automated extension-load QA, use a browser that supports command-line unpacked extension loading:
+
+```bash
+cd floun
+npm run qa:extension:load
+```
+
+If branded Google Chrome reports that extension-load flags are not allowed, point `FLOUN_CHROME_BIN` at Chrome for Testing or Chromium, or complete the manual `chrome://extensions` load.
+
 ## Optional Gemini Report Text
 
 PDF reports work without an AI key by using local fallback text. To enable Gemini-generated sections, copy `floun/.env.example` to `floun/.env.local` and set:

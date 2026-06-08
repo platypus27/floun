@@ -43,6 +43,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Hardened token collection with lightweight token count/length caps before token candidates enter popup analysis or report generation.
 - Hardened page collector error handling so primitive or malformed callback values become partial scan warnings rather than adapter crashes or invalid metadata.
 - Hardened scan response validation so the popup rejects malformed page headers, normalized TLS facts, certificate facts, adapter metadata, and warning arrays.
+- Added an opt-in extension-load QA helper that recognizes Floun in an isolated browser profile and reports the branded Google Chrome command-line extension-loading limitation with a concrete Chrome for Testing / Chromium next step.
 
 ## Verification Commands
 
@@ -54,6 +55,7 @@ npm run package:extension
 npm run release:artifact
 npm run release:determinism
 npm run store:check
+npm run qa:extension:load
 npm run release:ready
 npm test
 npm run build
@@ -72,6 +74,8 @@ The package artifacts are written to `floun/release/floun-2.0.0.zip` and byte-id
 Chrome Web Store prep material lives under `docs/store/`.
 
 `npm run release:publish:check` is intentionally stricter than the scripted release-prep checks. It runs release readiness and then fails until every required Manual Chrome QA evidence row is present, marked Pass, and backed by non-placeholder evidence.
+
+`npm run qa:extension:load` is optional and intended for local release QA. It requires Chrome for Testing or Chromium when automated command-line extension loading is needed; branded Google Chrome 137+ removed or restricted the relevant unpacked-extension flags, so a manual `chrome://extensions` load remains valid release evidence.
 
 ## Manual QA Targets
 

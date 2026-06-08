@@ -1,6 +1,6 @@
 # Floun 2.0.0 QA Evidence
 
-Status: scripted release-prep and hardening audit checks passed on June 8, 2026; Chrome extension manual QA is blocked by automation access to `chrome://extensions/` and must be completed manually before tag, push, Chrome Web Store upload, or publication.
+Status: scripted release-prep and hardening audit checks passed on June 8, 2026; Chrome extension manual QA remains blocked and must be completed manually or with Chrome for Testing / Chromium before tag, push, Chrome Web Store upload, or publication.
 
 ## Artifact Evidence
 
@@ -54,7 +54,7 @@ Artifact safety checks:
 | `npm run release:artifact` | Pass | Verifies both release zips and matching SHA-256. |
 | `npm run store:check` | Pass | Store docs and PNG dimensions verified. |
 | deterministic packaging check | Pass | Two consecutive package runs produced matching SHA-256: `bb4e43437bdfaf48a8f64c112d1464ec47e3bf1e6527d50b10a45e2be8ce8de3`. |
-| `npm test` | Pass | 27 test files, 98 tests. |
+| `npm test` | Pass | 28 test files, 101 tests. |
 | publish readiness gate tests | Pass | `release:publish:check` is covered to fail while Manual Chrome QA rows remain blocked, reject missing required scenarios, reject placeholder Pass evidence, and pass with complete required manual QA evidence. |
 | report redaction pipeline tests | Pass | `createReport` fallback and Gemini prompt paths omit raw token evidence before PDF generation. |
 | report logo asset resolution tests | Pass | PDF report logo loading uses Chrome runtime asset URLs when available and falls back to relative packaged paths outside Chrome. |
@@ -63,6 +63,7 @@ Artifact safety checks:
 | scan protocol runtime-guard tests | Pass | New scan targets are minimized to origin-only URLs, and negative tab IDs, path/credential/query/fragment-bearing target URLs, oversized token facts, malformed page headers, normalized TLS facts, certificate facts, adapter metadata, and warning arrays are rejected before adapters run or the popup accepts a success response. |
 | QA evidence consistency tests | Pass | `release:artifact` rejects stale QA evidence hashes, sizes, archive entry lists, duplicate or unsafe ZIP entry names, unexpected packaged file types, unexpected top-level or nested manifest keys, packaged manifest CSP drift, remote/data packaged references, inline HTML execution, source map references, and external CSS references before release readiness can pass. |
 | store readiness version tests | Pass | `store:check` derives the release evidence directory from `package.json` so future version changes cannot keep checking stale release docs. |
+| extension-load QA helper tests | Pass | `qa:extension:load` helper behavior classifies branded Chrome extension flag removal, recognizes loaded Floun runtime/profile evidence, and reports actionable next steps. |
 | `npm run build` | Pass | Production Vite build. |
 | `npm audit --omit=dev` | Pass | 0 vulnerabilities. |
 | `npx tsc --noEmit` | Pass | TypeScript check. |
@@ -72,11 +73,12 @@ Artifact safety checks:
 ## Manual Chrome QA
 
 - Chrome version: `148.0.7778.168`
-- Automation note: Codex Chrome automation connected successfully, but opening `chrome://extensions/` was blocked by the browser automation URL policy. Because loading the unpacked extension requires that page, extension-load, popup-scan, and PDF-download QA could not be completed by automation in this run.
+- Automation note: Codex Chrome automation connected successfully, but opening `chrome://extensions/` was blocked by the browser automation URL policy. A deeper command-line probe also showed branded Google Chrome `148.0.7778.168` ignores unpacked-extension load flags: Chrome logged `--disable-extensions-except is not allowed in Google Chrome, ignoring.` A throwaway MV3 extension failed under the same launch path, so this is a branded-Chrome automation limitation rather than a Floun manifest rejection.
+- Repeatable helper: run `npm run qa:extension:load` from `floun/` with `FLOUN_CHROME_BIN` pointing at Chrome for Testing or Chromium to verify unpacked extension loading without adding runtime dependencies. The helper is expected to fail on branded Google Chrome 148 with an actionable message because official Chrome removed command-line extension loading support.
 
 | Scenario | Result | Evidence |
 | --- | --- | --- |
-| Load `floun/build/` in Chrome extensions | Blocked | Automation cannot open `chrome://extensions/`; complete manually in Chrome. |
+| Load `floun/build/` in Chrome extensions | Blocked | Branded Chrome 148 ignored command-line extension-load flags and Codex automation cannot open `chrome://extensions/`; complete manually in Chrome or run `npm run qa:extension:load` with Chrome for Testing / Chromium. |
 | Scan `http://127.0.0.1:4174/crypto-readiness.html` | Blocked | Requires loaded extension popup; complete manually after loading `floun/build/`. |
 | Scan `https://www.cloudflare.com/` | Blocked | Requires loaded extension popup; complete manually and confirm TLS/certificate status. |
 | Scan `http://example.com/` | Blocked | Requires loaded extension popup; complete manually and confirm certificate warning is unavailable. |
