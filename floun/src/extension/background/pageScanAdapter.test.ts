@@ -59,6 +59,24 @@ test("returns partial metadata when injection produces no collector payload", as
   });
 });
 
+test("returns partial metadata for primitive collector payloads", async () => {
+  stubChromeWithResult("bad page scan payload");
+
+  await expect(executePageScan(7, "https://example.com")).resolves.toMatchObject({
+    data: { tokens: [], headers: {}, jsScripts: [] },
+    meta: { status: "partial", message: "Page collector returned malformed data." },
+  });
+});
+
+test("treats malformed collector error payloads as malformed data", async () => {
+  stubChromeWithResult({ error: 42 });
+
+  await expect(executePageScan(7, "https://example.com")).resolves.toMatchObject({
+    data: { tokens: [], headers: {}, jsScripts: [] },
+    meta: { status: "partial", message: "Page collector returned malformed data." },
+  });
+});
+
 test("normalizes malformed page collector data instead of leaking invalid payloads", async () => {
   stubChromeWithResult({
     tokens: [" usable-token ", 42, ""],

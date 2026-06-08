@@ -10,13 +10,19 @@ interface NormalizedPageScanResult {
   malformed: boolean;
 }
 
-const isPageCollectorError = (result: PageCollectorResult): result is { error: string } => (
-  "error" in result
-);
-
 const isRecord = (value: unknown): value is Record<string, unknown> => (
   Boolean(value) && typeof value === "object" && !Array.isArray(value)
 );
+
+const getPageCollectorError = (result: unknown): string | null => {
+  if (!isRecord(result) || typeof result.error !== "string") {
+    return null;
+  }
+
+  const errorMessage = result.error.trim();
+
+  return errorMessage.length > 0 ? errorMessage : null;
+};
 
 const normalizeTokens = (tokens: unknown): { values: string[]; malformed: boolean } => {
   if (!Array.isArray(tokens)) {
@@ -133,11 +139,12 @@ export function executePageScan(
         }
 
         const scanResult = injectionResults?.[0]?.result as PageCollectorResult | undefined;
+        const pageCollectorError = getPageCollectorError(scanResult);
 
-        if (scanResult && isPageCollectorError(scanResult)) {
+        if (pageCollectorError) {
           resolve({
             data: emptyPageScan(),
-            meta: partialMeta(scanResult.error),
+            meta: partialMeta(pageCollectorError),
           });
           return;
         }
