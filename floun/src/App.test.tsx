@@ -51,6 +51,9 @@ test('renders expandable finding rows with structured explanation fields', async
   fireEvent.click(screen.getByRole('button', { name: /scan/i }));
 
   const findingTitle = await screen.findByText('Found MD5 Hashing');
+  expect(screen.getAllByText('TLS Results')).toHaveLength(2);
+  expect(screen.queryByText('Header Results')).not.toBeInTheDocument();
+
   const findingSummary = findingTitle.closest('summary');
 
   expect(findingSummary).toBeTruthy();

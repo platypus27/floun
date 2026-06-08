@@ -1,4 +1,8 @@
-import { AnalysisFinding } from "./analysisFinding";
+import {
+  AnalysisModuleResult,
+  buildFindingGroupLabels,
+  buildFindingGroups,
+} from "./analysisModules";
 import { generateChatMessage, hasGeminiApiKey } from "./reportgen/geminiService";
 import {
   FindingGroups,
@@ -53,17 +57,10 @@ async function buildReportSections(groups: FindingGroups): Promise<ReportSection
 }
 
 export async function createReport(
-  jsResults: AnalysisFinding[],
-  tokenResults: AnalysisFinding[],
-  headerResults: AnalysisFinding[],
-  certResults: AnalysisFinding[]
+  moduleResults: AnalysisModuleResult[]
 ) {
-  const groups: FindingGroups = {
-    JavaScript: jsResults,
-    Tokens: tokenResults,
-    Headers: headerResults,
-    Certificates: certResults,
-  };
+  const groups = buildFindingGroups(moduleResults);
+  const groupLabels = buildFindingGroupLabels(moduleResults);
   const sections = await buildReportSections(groups);
   const { generatePDFReport } = await import("./reportgen/pdfService");
 
@@ -72,5 +69,5 @@ export async function createReport(
     subtitle: "Identifying and Mitigating Cryptographic Vulnerabilities",
     date: new Date().toLocaleDateString(),
     confidentialityNotice: "Confidential - For Internal Use Only",
-  }, buildReportContent(groups, sections));
+  }, buildReportContent(groups, sections, groupLabels));
 }

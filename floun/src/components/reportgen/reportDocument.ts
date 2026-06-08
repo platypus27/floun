@@ -1,11 +1,8 @@
 import { AnalysisFinding, FindingSeverity, formatFindingsForReport } from "../analysisFinding";
 
-export interface FindingGroups {
-  JavaScript: AnalysisFinding[];
-  Tokens: AnalysisFinding[];
-  Headers: AnalysisFinding[];
-  Certificates: AnalysisFinding[];
-}
+export type FindingGroups = Record<string, AnalysisFinding[]>;
+
+export type FindingGroupLabels = Record<string, string>;
 
 export interface ReportSections {
   introduction: string;
@@ -25,12 +22,7 @@ export interface ReportContent extends ReportSections {
   vulnerableMethodsBreakdown: string;
 }
 
-export const emptyFindingGroups = (): FindingGroups => ({
-  JavaScript: [],
-  Tokens: [],
-  Headers: [],
-  Certificates: [],
-});
+export const emptyFindingGroups = (): FindingGroups => ({});
 
 export function reportSectionPrompts(findingsText: string): Record<keyof ReportSections, string> {
   return {
@@ -95,7 +87,11 @@ export function fallbackSections(
   };
 }
 
-export function buildReportContent(groups: FindingGroups, sections: ReportSections): ReportContent {
+export function buildReportContent(
+  groups: FindingGroups,
+  sections: ReportSections,
+  groupLabels: FindingGroupLabels = {}
+): ReportContent {
   const allFindings = flattenFindingGroups(groups);
 
   return {
@@ -108,20 +104,23 @@ export function buildReportContent(groups: FindingGroups, sections: ReportSectio
     conclusion: sanitizeReportText(sections.conclusion),
     appendix: buildAppendix(groups),
     reviewMethodsCount: countFindingsBySeverity(allFindings, "Review"),
-    reviewMethodsBreakdown: [
-      `JS: ${countFindingsBySeverity(groups.JavaScript, "Review")}`,
-      `Tokens: ${countFindingsBySeverity(groups.Tokens, "Review")}`,
-      `Headers: ${countFindingsBySeverity(groups.Headers, "Review")}`,
-      `Certificates: ${countFindingsBySeverity(groups.Certificates, "Review")}`,
-    ].join(", "),
+    reviewMethodsBreakdown: buildSeverityBreakdown(groups, "Review", groupLabels),
     vulnerableMethodsCount: countVulnerableFindings(allFindings),
-    vulnerableMethodsBreakdown: [
-      `JS: ${countVulnerableFindings(groups.JavaScript)}`,
-      `Tokens: ${countVulnerableFindings(groups.Tokens)}`,
-      `Headers: ${countVulnerableFindings(groups.Headers)}`,
-      `Certificates: ${countVulnerableFindings(groups.Certificates)}`,
-    ].join(", "),
+    vulnerableMethodsBreakdown: buildSeverityBreakdown(groups, "Vulnerable", groupLabels),
   };
+}
+
+function buildSeverityBreakdown(
+  groups: FindingGroups,
+  severity: FindingSeverity,
+  groupLabels: FindingGroupLabels
+): string {
+  return Object.entries(groups)
+    .map(([group, findings]) => {
+      const label = groupLabels[group] || group;
+      return `${label}: ${countFindingsBySeverity(findings, severity)}`;
+    })
+    .join(", ");
 }
 
 function buildAppendix(groups: FindingGroups): string {

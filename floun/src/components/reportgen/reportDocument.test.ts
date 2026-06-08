@@ -36,8 +36,15 @@ const reviewFinding: AnalysisFinding = {
 const groups: FindingGroups = {
   JavaScript: [],
   Tokens: [secretFinding],
-  Headers: [reviewFinding],
+  TLS: [reviewFinding],
   Certificates: [],
+};
+
+const groupLabels = {
+  JavaScript: "JS",
+  Tokens: "Tokens",
+  TLS: "TLS",
+  Certificates: "Certificates",
 };
 
 test("buildFindingsText omits raw evidence", () => {
@@ -49,16 +56,18 @@ test("buildFindingsText omits raw evidence", () => {
 
 test("buildReportContent omits raw evidence from appendices", () => {
   const sections = fallbackSections(buildFindingsText(groups), 1, 1);
-  const content = buildReportContent(groups, sections);
+  const content = buildReportContent(groups, sections, groupLabels);
 
   expect(content.appendix).toContain("Tokens Results");
+  expect(content.appendix).toContain("TLS Results");
+  expect(content.appendix).not.toContain("Headers Results");
   expect(content.appendix).toContain("Rationale: Classical TLS suites are migration inventory signals.");
   expect(content.appendix).toContain("Limitations: TLS API responses may omit negotiated group details.");
   expect(content.appendix).toContain("Recommendation: Review negotiated TLS behavior manually.");
   expect(content.appendix).toContain("References: https://www.cisa.gov/resources-tools/resources/quantum-readiness-migration-post-quantum-cryptography");
   expect(content.appendix).not.toContain("secret-token-value");
   expect(content.reviewMethodsCount).toBe(1);
-  expect(content.reviewMethodsBreakdown).toBe("JS: 0, Tokens: 0, Headers: 1, Certificates: 0");
+  expect(content.reviewMethodsBreakdown).toBe("JS: 0, Tokens: 0, TLS: 1, Certificates: 0");
   expect(content.vulnerableMethodsCount).toBe(1);
-  expect(content.vulnerableMethodsBreakdown).toBe("JS: 0, Tokens: 1, Headers: 0, Certificates: 0");
+  expect(content.vulnerableMethodsBreakdown).toBe("JS: 0, Tokens: 1, TLS: 0, Certificates: 0");
 });
