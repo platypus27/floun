@@ -40,6 +40,47 @@ $ForbiddenText = @(
 
 $TextExtensions = @(".css", ".html", ".js", ".json", ".txt")
 $GeminiKeyPattern = "AIza[0-9A-Za-z_-]{20,}"
+$ExpectedPermissions = @("activeTab", "scripting")
+$ExpectedHostPermissions = @(
+  "https://api.ssllabs.com/*",
+  "https://ssl-checker.io/*"
+)
+
+function Assert-StringSet {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $Label,
+
+    [Parameter(Mandatory = $true)]
+    [AllowEmptyCollection()]
+    [string[]] $Actual,
+
+    [Parameter(Mandatory = $true)]
+    [AllowEmptyCollection()]
+    [string[]] $Expected
+  )
+
+  $Missing = @($Expected | Where-Object { $Actual -notcontains $_ })
+  $Unexpected = @($Actual | Where-Object { $Expected -notcontains $_ })
+
+  if ($Missing.Length -gt 0 -or $Unexpected.Length -gt 0 -or $Actual.Length -ne $Expected.Length) {
+    throw "$Label mismatch. Missing: $($Missing -join ', '); unexpected: $($Unexpected -join ', ')"
+  }
+}
+
+function Read-ZipEntryText {
+  param(
+    [Parameter(Mandatory = $true)]
+    [System.IO.Compression.ZipArchiveEntry] $Entry
+  )
+
+  $Reader = [System.IO.StreamReader]::new($Entry.Open())
+  try {
+    $Reader.ReadToEnd()
+  } finally {
+    $Reader.Dispose()
+  }
+}
 
 function Test-ReleaseZip {
   param(
@@ -74,6 +115,32 @@ function Test-ReleaseZip {
           throw "Release artifact contains forbidden entry: $EntryName"
         }
       }
+    }
+
+    $ManifestEntry = $Zip.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "manifest.json" } | Select-Object -First 1
+    $Manifest = Read-ZipEntryText -Entry $ManifestEntry | ConvertFrom-Json
+
+    if ($Manifest.manifest_version -ne 3) {
+      throw "Packaged manifest must use manifest_version 3."
+    }
+
+    if ($Manifest.version -ne $Version) {
+      throw "Packaged manifest version $($Manifest.version) does not match package version $Version."
+    }
+
+    Assert-StringSet -Label "Packaged manifest permissions" -Actual @($Manifest.permissions) -Expected $ExpectedPermissions
+    Assert-StringSet -Label "Packaged manifest host_permissions" -Actual @($Manifest.host_permissions) -Expected $ExpectedHostPermissions
+
+    if ($null -ne $Manifest.content_scripts) {
+      throw "Packaged manifest must not include always-on content_scripts."
+    }
+
+    if ($Manifest.background.service_worker -ne "background.js") {
+      throw "Packaged manifest background service worker must be background.js."
+    }
+
+    if ($Manifest.background.type -ne "module") {
+      throw "Packaged manifest background worker must be a module."
     }
 
     foreach ($Entry in $Zip.Entries) {
