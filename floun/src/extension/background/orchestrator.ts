@@ -2,6 +2,10 @@ import { fetchCertificateScan } from "./certificateScanAdapter";
 import { executePageScan } from "./pageScanAdapter";
 import { buildScanMeta } from "./scanMeta";
 import { fetchTlsScan } from "./tlsScanAdapter";
+import {
+  INVALID_SCAN_TARGET_MESSAGE,
+  isValidScanTarget,
+} from "../scanProtocol";
 import type {
   CertificateScanData,
   PageScanData,
@@ -28,7 +32,7 @@ export async function runWebsiteScan(
   adapters: ScanAdapters = defaultScanAdapters
 ): Promise<ScanPayload> {
   if (!isValidScanTarget(target)) {
-    throw new Error("Scan target is missing tab ID, protocol, hostname, or page origin.");
+    throw new Error(INVALID_SCAN_TARGET_MESSAGE);
   }
 
   const [pageScan, tlsScan, certificateScan] = await Promise.all([
@@ -46,16 +50,4 @@ export async function runWebsiteScan(
   };
 }
 
-export function isValidScanTarget(target: unknown): target is ScanTarget {
-  const candidate = target as ScanTarget | null;
-
-  return Boolean(
-    candidate &&
-    Number.isInteger(candidate.tabId) &&
-    ["http:", "https:"].includes(candidate.protocol) &&
-    typeof candidate.hostname === "string" &&
-    candidate.hostname.length > 0 &&
-    typeof candidate.pageOrigin === "string" &&
-    candidate.pageOrigin.length > 0
-  );
-}
+export { isValidScanTarget };

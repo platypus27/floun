@@ -32,6 +32,7 @@ test("requests scans directly from the background service worker", async () => {
       data: {
         tokens: [],
         jsScripts: [],
+        headers: {},
         TLS: null,
         certificates: null,
         scanMeta: {
@@ -75,4 +76,20 @@ test("requests scans directly from the background service worker", async () => {
   }, expect.any(Function));
   expect(tabsSendMessage).not.toHaveBeenCalled();
   expect(payload.scanMeta.warnings).toHaveLength(2);
+});
+
+test("rejects malformed background responses", async () => {
+  vi.stubGlobal("chrome", {
+    tabs: {
+      query: vi.fn((_query, callback) => {
+        callback([{ id: 7, url: "https://example.com/path?query=1" }]);
+      }),
+    },
+    runtime: {
+      lastError: undefined,
+      sendMessage: vi.fn((_message, callback) => callback({ status: "success", data: {} })),
+    },
+  });
+
+  await expect(scanActiveTab()).rejects.toThrow("Scan failed.");
 });

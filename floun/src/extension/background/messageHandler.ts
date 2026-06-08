@@ -1,16 +1,18 @@
 import { getErrorMessage } from "./errors";
 import { runWebsiteScan } from "./orchestrator";
 import type {
-  ScanErrorResponse,
   ScanPayload,
-  ScanSuccessResponse,
   ScanTarget,
 } from "../scanTypes";
-
-const SCAN_WEBSITE_ACTION = "scanWebsite";
-
-const successResponse = (data: ScanPayload): ScanSuccessResponse => ({ status: "success", data });
-const errorResponse = (message: string): ScanErrorResponse => ({ status: "error", message });
+import {
+  INVALID_SCAN_TARGET_MESSAGE,
+  buildScanErrorResponse,
+  buildScanSuccessResponse,
+  isScanActionMessage,
+  isScanRequest,
+  type ScanErrorResponse,
+  type ScanSuccessResponse,
+} from "../scanProtocol";
 
 export type SendResponse = (response: ScanSuccessResponse | ScanErrorResponse) => void;
 export type RunScan = (target: ScanTarget) => Promise<ScanPayload>;
@@ -20,15 +22,18 @@ export function handleScanMessage(
   sendResponse: SendResponse,
   runScan: RunScan = runWebsiteScan
 ): boolean {
-  const scanMessage = message as { action?: string; target?: ScanTarget } | null;
-
-  if (scanMessage?.action !== SCAN_WEBSITE_ACTION) {
+  if (!isScanActionMessage(message)) {
     return false;
   }
 
-  runScan(scanMessage.target as ScanTarget)
-    .then((data) => sendResponse(successResponse(data)))
-    .catch((error) => sendResponse(errorResponse(getErrorMessage(error))));
+  if (!isScanRequest(message)) {
+    sendResponse(buildScanErrorResponse(INVALID_SCAN_TARGET_MESSAGE));
+    return true;
+  }
+
+  runScan(message.target)
+    .then((data) => sendResponse(buildScanSuccessResponse(data)))
+    .catch((error) => sendResponse(buildScanErrorResponse(getErrorMessage(error))));
 
   return true;
 }

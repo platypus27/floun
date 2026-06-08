@@ -1,7 +1,7 @@
-import { handleScanMessage } from "./messageHandler";
 import { buildScanMeta } from "./scanMeta";
 import { runWebsiteScan } from "./orchestrator";
-import { SCAN_WEBSITE_ACTION, ScanTarget } from "../scanTypes";
+import type { ScanTarget } from "../scanTypes";
+import { INVALID_SCAN_TARGET_MESSAGE } from "../scanProtocol";
 
 const target: ScanTarget = {
   tabId: 7,
@@ -59,22 +59,6 @@ test("builds scan warnings for non-complete adapter statuses", () => {
   ]);
 });
 
-test("returns an error response for invalid scan targets", async () => {
-  const response = new Promise((resolve) => {
-    const handled = handleScanMessage(
-      { action: SCAN_WEBSITE_ACTION, target: {} },
-      resolve
-    );
-
-    expect(handled).toBe(true);
-  });
-
-  await expect(response).resolves.toMatchObject({
-    status: "error",
-    message: "Scan target is missing tab ID, protocol, hostname, or page origin.",
-  });
-});
-
-test("ignores unrelated runtime messages", () => {
-  expect(handleScanMessage({ action: "other" }, vi.fn())).toBe(false);
+test("rejects invalid scan targets before running adapters", async () => {
+  await expect(runWebsiteScan({} as ScanTarget)).rejects.toThrow(INVALID_SCAN_TARGET_MESSAGE);
 });
