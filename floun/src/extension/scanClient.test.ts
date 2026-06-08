@@ -15,7 +15,7 @@ test("builds a scan target from a URL", () => {
     protocol: "https:",
     hostname: "example.com",
     pageOrigin: "https://example.com",
-    url: "https://example.com/path",
+    url: "https://example.com/",
   });
 });
 
@@ -71,7 +71,7 @@ test("requests scans directly from the background service worker", async () => {
       protocol: "https:",
       hostname: "example.com",
       pageOrigin: "https://example.com",
-      url: "https://example.com/path",
+      url: "https://example.com/",
     },
   }, expect.any(Function));
   expect(tabsSendMessage).not.toHaveBeenCalled();

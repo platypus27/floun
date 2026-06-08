@@ -19,7 +19,7 @@ const target: ScanTarget = {
   protocol: "https:",
   hostname: "example.com",
   pageOrigin: "https://example.com",
-  url: "https://example.com/path",
+  url: "https://example.com/",
 };
 
 const payload: ScanPayload = {
@@ -42,18 +42,19 @@ test("builds sanitized scan targets from web URLs", () => {
     protocol: "https:",
     hostname: "example.com",
     pageOrigin: "https://example.com",
-    url: "https://example.com/path",
+    url: "https://example.com/",
   });
   expect(buildScanTarget("https://user:pass@example.com/path?access_token=secret#token=secret", 7)).toEqual({
     tabId: 7,
     protocol: "https:",
     hostname: "example.com",
     pageOrigin: "https://example.com",
-    url: "https://example.com/path",
+    url: "https://example.com/",
   });
 
   expect(isValidScanTarget(target)).toBe(true);
   expect(isValidScanTarget({ ...target, url: "" })).toBe(false);
+  expect(isValidScanTarget({ ...target, url: "https://example.com/path" })).toBe(false);
   expect(isValidScanTarget({ ...target, url: "https://user:pass@example.com/path" })).toBe(false);
   expect(isValidScanTarget({ ...target, url: "https://example.com/path?access_token=secret" })).toBe(false);
   expect(isValidScanTarget({ ...target, url: "https://example.com/path#token=secret" })).toBe(false);

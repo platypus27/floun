@@ -88,10 +88,11 @@ const parseUrl = (value: unknown): URL | null => {
   }
 };
 
-const stripUrlCredentials = (url: URL): URL => {
+const minimizeUrlForScanTarget = (url: URL): URL => {
   const sanitizedUrl = new URL(url.href);
   sanitizedUrl.username = "";
   sanitizedUrl.password = "";
+  sanitizedUrl.pathname = "/";
   sanitizedUrl.search = "";
   sanitizedUrl.hash = "";
 
@@ -113,7 +114,7 @@ const isScanPayload = (value: unknown): value is ScanPayload => {
 
 export function buildScanTarget(url: string, tabId: number): ScanTarget {
   const parsedUrl = new URL(url);
-  const sanitizedUrl = stripUrlCredentials(parsedUrl);
+  const sanitizedUrl = minimizeUrlForScanTarget(parsedUrl);
 
   if (!isValidTabId(tabId) || !["http:", "https:"].includes(parsedUrl.protocol) || !parsedUrl.hostname) {
     throw new Error("Floun can scan HTTP and HTTPS tabs only.");
@@ -149,6 +150,7 @@ export function isValidScanTarget(target: unknown): target is ScanTarget {
     ["http:", "https:"].includes(candidate.protocol) &&
     parsedUrl.username === "" &&
     parsedUrl.password === "" &&
+    parsedUrl.pathname === "/" &&
     parsedUrl.search === "" &&
     parsedUrl.hash === "" &&
     candidate.protocol === parsedUrl.protocol &&
