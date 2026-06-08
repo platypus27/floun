@@ -49,7 +49,8 @@ Artifact safety checks:
 | `npm run release:artifact` | Pass | Verifies both release zips and matching SHA-256. |
 | `npm run store:check` | Pass | Store docs and PNG dimensions verified. |
 | deterministic packaging check | Pass | Two consecutive package runs produced matching SHA-256: `bd5c8ce15ef68e8262ca73fd0a5db915fc9524ca00a7a9e92be9040485a3e511`. |
-| `npm test` | Pass | 21 test files, 63 tests. |
+| `npm test` | Pass | 22 test files, 65 tests. |
+| report redaction pipeline tests | Pass | `createReport` fallback and Gemini prompt paths omit raw token evidence before PDF generation. |
 | `npm run build` | Pass | Production Vite build. |
 | `npm audit --omit=dev` | Pass | 0 vulnerabilities. |
 | `npx tsc --noEmit` | Pass | TypeScript check. |
