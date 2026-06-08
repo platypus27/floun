@@ -4,6 +4,8 @@ const getErrorMessage = (error: unknown): string => (
     error instanceof Error ? error.message : "Unknown parsing error"
 );
 
+export const RECOMMENDED_MIN_TOKEN_LENGTH = 32;
+
 const FormatTest = ({ tokenData }: { tokenData: SingleTokenData }): LegacyTokenCheckResult => {
     const runTest = (): LegacyTokenCheckResult => {
         const { token } = tokenData;
@@ -27,9 +29,9 @@ const FormatTest = ({ tokenData }: { tokenData: SingleTokenData }): LegacyTokenC
 
 
         // 0. Short Token Check
-        const minLength = 32;
+        const minLength = RECOMMENDED_MIN_TOKEN_LENGTH;
 
-        if (token.length < minLength) { //Adjust this value
+        if (token.length < minLength) {
             return {
                 passed: false,
                 message: `Token is too short (${token.length} characters, minimum ${minLength} recommended) and may be vulnerable to brute-force attacks.`,
