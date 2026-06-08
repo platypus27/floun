@@ -169,6 +169,21 @@ function Assert-PackagedIndexReferences {
   }
 }
 
+function Assert-PackagedIndexHasNoInlineExecution {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $IndexHtml
+  )
+
+  if ($IndexHtml -match '(?is)<script\b(?![^>]*\bsrc\s*=)[^>]*>') {
+    throw "Packaged index.html must not contain inline scripts."
+  }
+
+  if ($IndexHtml -match '(?i)\s+on[a-z]+\s*=') {
+    throw "Packaged index.html must not contain inline event handlers."
+  }
+}
+
 function Assert-PackagedBackgroundReferences {
   param(
     [Parameter(Mandatory = $true)]
@@ -358,6 +373,7 @@ function Test-ReleaseZip {
 
     $IndexEntry = $Zip.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "index.html" } | Select-Object -First 1
     $IndexHtml = Read-ZipEntryText -Entry $IndexEntry
+    Assert-PackagedIndexHasNoInlineExecution -IndexHtml $IndexHtml
     Assert-PackagedIndexReferences -IndexHtml $IndexHtml -NormalizedEntries $NormalizedEntries
 
     $BackgroundEntry = $Zip.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "background.js" } | Select-Object -First 1

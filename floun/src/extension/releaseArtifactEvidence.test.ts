@@ -54,4 +54,11 @@ test("release artifact check rejects remote or data packaged references", () => 
   expect(script).not.toContain('return $null');
 });
 
+test("release artifact check rejects inline HTML execution", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("Packaged index.html must not contain inline scripts.");
+  expect(script).toContain("Packaged index.html must not contain inline event handlers.");
+});
+
 export {};
