@@ -1,3 +1,7 @@
+param(
+  [string] $QaEvidencePath
+)
+
 $ErrorActionPreference = "Stop"
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -10,6 +14,11 @@ $ZipPath = Join-Path $ProjectRoot "release\floun-$Version.zip"
 $VersionParts = $Version -split "\."
 $AliasVersion = if ($VersionParts.Length -ge 2) { "$($VersionParts[0]).$($VersionParts[1])" } else { $Version }
 $AliasZipPath = Join-Path $ProjectRoot "release\floun-$AliasVersion.zip"
+
+if (-not $QaEvidencePath) {
+  $RepoRoot = Split-Path -Parent $ProjectRoot
+  $QaEvidencePath = Join-Path $RepoRoot "docs\release\$Version\QA_EVIDENCE.md"
+}
 
 $RequiredEntries = @(
   "manifest.json",
@@ -211,6 +220,74 @@ function Assert-PackagedManifestReferences {
   }
 }
 
+function Assert-ContentContains {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $Content,
+
+    [Parameter(Mandatory = $true)]
+    [string] $Label,
+
+    [Parameter(Mandatory = $true)]
+    [string] $Expected
+  )
+
+  if (-not $Content.Contains($Expected)) {
+    throw "QA evidence mismatch: missing $Label ($Expected)"
+  }
+}
+
+function Assert-QaEvidenceMatchesArtifact {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $EvidencePath,
+
+    [Parameter(Mandatory = $true)]
+    $Canonical,
+
+    [Parameter(Mandatory = $true)]
+    $Alias,
+
+    [Parameter(Mandatory = $true)]
+    [string] $Version,
+
+    [Parameter(Mandatory = $true)]
+    [string] $AliasVersion
+  )
+
+  if (-not (Test-Path -LiteralPath $EvidencePath)) {
+    throw "QA evidence document is missing: $EvidencePath"
+  }
+
+  $Content = Get-Content -Raw -LiteralPath $EvidencePath
+  $CanonicalPackagePath = "floun/release/floun-$Version.zip"
+  $AliasPackagePath = "floun/release/floun-$AliasVersion.zip"
+
+  Assert-ContentContains -Content $Content -Label "canonical package path" -Expected ('- Package path: `' + $CanonicalPackagePath + '`')
+  Assert-ContentContains -Content $Content -Label "alias package path" -Expected ('- Alias package path: `' + $AliasPackagePath + '`')
+  Assert-ContentContains -Content $Content -Label "canonical SHA-256" -Expected ('- SHA-256: `' + $Canonical.Hash + '`')
+  Assert-ContentContains -Content $Content -Label "alias SHA-256" -Expected ('- Alias SHA-256: `' + $Alias.Hash + '`')
+  Assert-ContentContains -Content $Content -Label "artifact size" -Expected ('- Size bytes: `' + $Canonical.Size + '`')
+  Assert-ContentContains -Content $Content -Label "deterministic packaging SHA-256" -Expected ('produced matching SHA-256: `' + $Canonical.Hash + '`')
+
+  $EntrySection = [regex]::Match(
+    $Content,
+    'Required archive entries:\s*(?<entries>(?:\r?\n- `[^`]+`)+)',
+    [System.Text.RegularExpressions.RegexOptions]::Singleline
+  )
+
+  if (-not $EntrySection.Success) {
+    throw "QA evidence mismatch: required archive entries section is missing or malformed."
+  }
+
+  $EvidenceEntries = @(
+    [regex]::Matches($EntrySection.Groups["entries"].Value, '- `(?<entry>[^`]+)`') |
+      ForEach-Object { $_.Groups["entry"].Value }
+  )
+
+  Assert-StringSet -Label "QA evidence archive entries" -Actual $EvidenceEntries -Expected $Canonical.Entries
+}
+
 function Test-ReleaseZip {
   param(
     [Parameter(Mandatory = $true)]
@@ -332,6 +409,13 @@ $Alias = if ($AliasZipPath -ne $ZipPath) {
 if ($Alias.Hash -ne $Canonical.Hash) {
   throw "Release alias hash does not match canonical artifact: $($Alias.Path)"
 }
+
+Assert-QaEvidenceMatchesArtifact `
+  -EvidencePath $QaEvidencePath `
+  -Canonical $Canonical `
+  -Alias $Alias `
+  -Version $Version `
+  -AliasVersion $AliasVersion
 
 Write-Host "Release artifact verified: $($Canonical.Path)"
 Write-Host "Alias artifact verified: $($Alias.Path)"
