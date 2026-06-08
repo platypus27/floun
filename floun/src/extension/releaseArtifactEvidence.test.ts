@@ -68,4 +68,12 @@ test("release artifact check rejects source map references", () => {
   expect(script).toContain("sourceMappingURL");
 });
 
+test("release artifact check rejects external CSS references", () => {
+  const script = readFileSync(artifactScript, "utf8");
+
+  expect(script).toContain("Release artifact contains forbidden external CSS reference");
+  expect(script).toContain("@import");
+  expect(script).toContain("url\\(");
+});
+
 export {};

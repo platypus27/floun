@@ -405,6 +405,10 @@ function Test-ReleaseZip {
         throw "Release artifact contains forbidden source map reference in $EntryName"
       }
 
+      if ($Extension -eq ".css" -and $Content -match '(?i)(?:@import\s+(?:url\()?\s*["'']?\s*(?:(?:https?|data|chrome|mailto):|//)|url\(\s*["'']?\s*(?:(?:https?|data|chrome|mailto):|//))') {
+        throw "Release artifact contains forbidden external CSS reference in $EntryName"
+      }
+
       if ($Content -match $GeminiKeyPattern) {
         throw "Release artifact contains a Gemini API-key-like value in $EntryName"
       }
