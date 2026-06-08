@@ -4,7 +4,9 @@ import type { PageScanData, ScanAdapterResult } from "../scanTypes";
 
 const emptyPageScan = (): PageScanData => ({ tokens: [], headers: {}, jsScripts: [] });
 const malformedPageDataMessage = "Page collector returned malformed data.";
-const truncatedPageDataMessage = "Page collector returned truncated script data.";
+const truncatedPageDataMessage = "Page collector returned truncated page data.";
+const maxTokenCount = 50;
+const maxTokenLength = 512;
 const maxScriptCount = 50;
 const maxScriptContentLength = 50_000;
 
@@ -28,13 +30,15 @@ const getPageCollectorError = (result: unknown): string | null => {
   return errorMessage.length > 0 ? errorMessage : null;
 };
 
-const normalizeTokens = (tokens: unknown): { values: string[]; malformed: boolean } => {
+const normalizeTokens = (tokens: unknown): { values: string[]; malformed: boolean; truncated: boolean } => {
   if (!Array.isArray(tokens)) {
-    return { values: [], malformed: true };
+    return { values: [], malformed: true, truncated: false };
   }
 
   let malformed = false;
+  let truncated = tokens.length > maxTokenCount;
   const values = tokens
+    .slice(0, maxTokenCount)
     .flatMap(token => {
       if (typeof token !== "string") {
         malformed = true;
@@ -47,10 +51,14 @@ const normalizeTokens = (tokens: unknown): { values: string[]; malformed: boolea
         malformed = true;
       }
 
-      return normalizedToken.length > 0 ? [normalizedToken] : [];
+      if (normalizedToken.length > maxTokenLength) {
+        truncated = true;
+      }
+
+      return normalizedToken.length > 0 ? [normalizedToken.slice(0, maxTokenLength)] : [];
     });
 
-  return { values, malformed };
+  return { values, malformed, truncated };
 };
 
 const normalizeHeaders = (headers: unknown): { values: Record<string, string>; malformed: boolean } => {
@@ -144,7 +152,7 @@ function normalizePageScanResult(result: unknown): NormalizedPageScanResult {
       jsScripts: jsScripts.values,
     },
     malformed: tokens.malformed || headers.malformed || jsScripts.malformed,
-    truncated: result.truncated === true || jsScripts.truncated,
+    truncated: result.truncated === true || tokens.truncated || jsScripts.truncated,
   };
 }
 

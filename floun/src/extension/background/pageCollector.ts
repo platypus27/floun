@@ -11,20 +11,31 @@ export interface PageCollectorData extends PageScanData {
 export type PageCollectorResult = PageCollectorData | PageCollectorError;
 
 export function collectPageScan(pageOrigin: string): Promise<PageCollectorResult> {
+  const maxTokenCount = 50;
+  const maxTokenLength = 512;
   const maxScriptCount = 50;
   const maxScriptContentLength = 50_000;
   const sessionTokenRegex = /^(?:[a-f0-9]{32,}|[a-zA-Z0-9_-]{36,}|eyJ[a-zA-Z0-9_-]+?\.[a-zA-Z0-9_-]+?\.[a-zA-Z0-9_-]+$|v\d+_[a-zA-Z0-9]+|Q[A-Za-z0-9+/=]{20,})$/;
   const getScanErrorMessage = (error: unknown): string => (
     error instanceof Error ? error.message : "Page scan failed."
   );
-  let scriptPayloadTruncated = false;
+  let pagePayloadTruncated = false;
+
+  const capToken = (token: string): string => {
+    if (token.length <= maxTokenLength) {
+      return token;
+    }
+
+    pagePayloadTruncated = true;
+    return token.slice(0, maxTokenLength);
+  };
 
   const capScriptContent = (content: string): string => {
     if (content.length <= maxScriptContentLength) {
       return content;
     }
 
-    scriptPayloadTruncated = true;
+    pagePayloadTruncated = true;
     return content.slice(0, maxScriptContentLength);
   };
 
@@ -45,9 +56,18 @@ export function collectPageScan(pageOrigin: string): Promise<PageCollectorResult
   const getTokens = (): string[] => {
     const tokens: string[] = [];
     const addCandidate = (value: string | null) => {
-      if (typeof value === "string" && value.trim() && sessionTokenRegex.test(value.trim())) {
-        tokens.push(value.trim());
+      const normalizedValue = typeof value === "string" ? value.trim() : "";
+
+      if (!normalizedValue || !sessionTokenRegex.test(normalizedValue)) {
+        return;
       }
+
+      if (tokens.length >= maxTokenCount) {
+        pagePayloadTruncated = true;
+        return;
+      }
+
+      tokens.push(capToken(normalizedValue));
     };
 
     document.cookie.split(";").forEach((cookie) => {
@@ -88,7 +108,7 @@ export function collectPageScan(pageOrigin: string): Promise<PageCollectorResult
 
     for (let i = 0; i < scriptElements.length; i += 1) {
       if (scripts.length >= maxScriptCount) {
-        scriptPayloadTruncated = true;
+        pagePayloadTruncated = true;
         break;
       }
 
@@ -132,7 +152,7 @@ export function collectPageScan(pageOrigin: string): Promise<PageCollectorResult
       tokens,
       headers,
       jsScripts,
-      truncated: scriptPayloadTruncated || undefined,
+      truncated: pagePayloadTruncated || undefined,
     }))
     .catch((error) => ({ error: getScanErrorMessage(error) }));
 }

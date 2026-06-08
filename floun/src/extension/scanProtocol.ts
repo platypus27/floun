@@ -29,8 +29,17 @@ const isValidTabId = (value: unknown): value is number => (
   typeof value === "number" && Number.isInteger(value) && value >= 0
 );
 
+const maxTokenCount = 50;
+const maxTokenLength = 512;
+
 const isStringArray = (value: unknown): value is string[] => (
   Array.isArray(value) && value.every(item => typeof item === "string")
+);
+
+const isTokenArray = (value: unknown): value is string[] => (
+  isStringArray(value) &&
+  value.length <= maxTokenCount &&
+  value.every(token => token.length <= maxTokenLength)
 );
 
 const isStringRecord = (value: unknown): value is Record<string, string> => (
@@ -106,7 +115,7 @@ const isScanPayload = (value: unknown): value is ScanPayload => {
 
   return Array.isArray(value.jsScripts) &&
     isStringRecord(value.headers) &&
-    isStringArray(value.tokens) &&
+    isTokenArray(value.tokens) &&
     isTlsScanData(value.TLS) &&
     isCertificateScanData(value.certificates) &&
     isScanMeta(value.scanMeta);

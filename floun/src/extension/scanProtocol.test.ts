@@ -139,6 +139,24 @@ test("rejects malformed page header facts in success responses", () => {
   })).toBe(false);
 });
 
+test("rejects oversized token facts in success responses", () => {
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      tokens: Array.from({ length: 51 }, () => "A".repeat(36)),
+    },
+  })).toBe(false);
+
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      tokens: ["A".repeat(513)],
+    },
+  })).toBe(false);
+});
+
 test("rejects malformed scan metadata in success responses", () => {
   expect(isScanSuccessResponse({
     status: "success",

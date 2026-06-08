@@ -135,6 +135,23 @@ test("caps oversized script payloads and marks page scans partial", async () => 
   expect(firstScript.content).not.toContain("MD5(0)");
   expect(result.meta).toEqual({
     status: "partial",
-    message: "Page collector returned truncated script data.",
+    message: "Page collector returned truncated page data.",
+  });
+});
+
+test("caps oversized token payloads and marks page scans partial", async () => {
+  stubChromeWithResult({
+    tokens: Array.from({ length: 55 }, () => "A".repeat(600)),
+    headers: {},
+    jsScripts: [],
+  });
+
+  const result = await executePageScan(7, "https://example.com");
+
+  expect(result.data.tokens).toHaveLength(50);
+  expect(result.data.tokens[0]).toHaveLength(512);
+  expect(result.meta).toEqual({
+    status: "partial",
+    message: "Page collector returned truncated page data.",
   });
 });
