@@ -36,7 +36,8 @@ Artifact safety checks:
 - Packaged manifest, popup HTML, and background worker references resolve to entries present inside the release ZIP.
 - No `.env` entries.
 - No QA fixture HTML.
-- No raw fixture token values.
+- No raw QA fixture token values.
+- No source, test, script, docs, dependency, source map, TypeScript, package metadata, or Vite config entries.
 - No Gemini API-key-like values.
 
 ## Scripted Verification

@@ -28,13 +28,27 @@ $RequiredPrefixes = @(
 $ForbiddenEntryPatterns = @(
   "(^|/)\.env($|[./])",
   "(^|/)fixtures?/",
-  "crypto-readiness\.html"
+  "(^|/)src/",
+  "(^|/)node_modules/",
+  "(^|/)docs/",
+  "(^|/)scripts/",
+  "crypto-readiness\.html",
+  "\.map$",
+  "\.tsx?$",
+  "\.test\.",
+  "package(?:-lock)?\.json$",
+  "tsconfig\.json$",
+  "vite\.config\."
 )
 
 $ForbiddenText = @(
   "0123456789abcdef0123456789abcdef",
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL",
+  "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmbG91biJ9.c2lnbmF0dXJl",
   "flounreleasecandidate20260605",
+  "QABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890==",
   "secretRawToken",
+  "secret-token-value",
   "REACT_APP_GEMINI_API_KEY="
 )
 
