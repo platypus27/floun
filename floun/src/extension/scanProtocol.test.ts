@@ -77,3 +77,70 @@ test("builds and validates scan responses", () => {
   expect(getScanResponseErrorMessage(errorResponse)).toBe("Scan failed.");
   expect(getScanResponseErrorMessage({ status: "unknown" })).toBe("Scan failed.");
 });
+
+test("rejects malformed normalized scan facts in success responses", () => {
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      TLS: { provider: "ssl-labs", endpoints: [{ protocolVersions: ["TLS 1.3"], cipherSuites: [7] }] },
+    },
+  })).toBe(false);
+
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      certificates: { provider: "ssl-checker", signatureAlgorithm: "" },
+    },
+  })).toBe(false);
+
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      certificates: { provider: "other-provider", signatureAlgorithm: "sha256" },
+    },
+  })).toBe(false);
+});
+
+test("rejects malformed scan metadata in success responses", () => {
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      scanMeta: {
+        page: { status: "done" },
+        tls: { status: "complete" },
+        certificates: { status: "complete" },
+        warnings: [],
+      },
+    },
+  })).toBe(false);
+
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      scanMeta: {
+        page: { status: "complete" },
+        tls: { status: "complete", message: 42 },
+        certificates: { status: "complete" },
+        warnings: [],
+      },
+    },
+  })).toBe(false);
+
+  expect(isScanSuccessResponse({
+    status: "success",
+    data: {
+      ...payload,
+      scanMeta: {
+        page: { status: "complete" },
+        tls: { status: "complete" },
+        certificates: { status: "complete" },
+        warnings: [7],
+      },
+    },
+  })).toBe(false);
+});

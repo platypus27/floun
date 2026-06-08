@@ -25,6 +25,48 @@ const isRecord = (value: unknown): value is Record<string, unknown> => (
   Boolean(value) && typeof value === "object" && !Array.isArray(value)
 );
 
+const isStringArray = (value: unknown): value is string[] => (
+  Array.isArray(value) && value.every(item => typeof item === "string")
+);
+
+const isScanAdapterMeta = (value: unknown): boolean => (
+  isRecord(value) &&
+  ["complete", "partial", "unavailable"].includes(value.status as string) &&
+  (value.message === undefined || typeof value.message === "string")
+);
+
+const isScanMeta = (value: unknown): boolean => (
+  isRecord(value) &&
+  isScanAdapterMeta(value.page) &&
+  isScanAdapterMeta(value.tls) &&
+  isScanAdapterMeta(value.certificates) &&
+  isStringArray(value.warnings)
+);
+
+const isTlsScanData = (value: unknown): boolean => (
+  value === null ||
+  (
+    isRecord(value) &&
+    value.provider === "ssl-labs" &&
+    Array.isArray(value.endpoints) &&
+    value.endpoints.every(endpoint => (
+      isRecord(endpoint) &&
+      isStringArray(endpoint.protocolVersions) &&
+      isStringArray(endpoint.cipherSuites)
+    ))
+  )
+);
+
+const isCertificateScanData = (value: unknown): boolean => (
+  value === null ||
+  (
+    isRecord(value) &&
+    value.provider === "ssl-checker" &&
+    typeof value.signatureAlgorithm === "string" &&
+    value.signatureAlgorithm.trim().length > 0
+  )
+);
+
 const parseUrl = (value: unknown): URL | null => {
   if (typeof value !== "string" || value.length === 0) {
     return null;
@@ -44,10 +86,10 @@ const isScanPayload = (value: unknown): value is ScanPayload => {
 
   return Array.isArray(value.jsScripts) &&
     isRecord(value.headers) &&
-    Array.isArray(value.tokens) &&
-    "TLS" in value &&
-    "certificates" in value &&
-    isRecord(value.scanMeta);
+    isStringArray(value.tokens) &&
+    isTlsScanData(value.TLS) &&
+    isCertificateScanData(value.certificates) &&
+    isScanMeta(value.scanMeta);
 };
 
 export function buildScanTarget(url: string, tabId: number): ScanTarget {
