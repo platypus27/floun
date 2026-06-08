@@ -1,3 +1,5 @@
+import { summaryFindingSerializer } from "./findingUiSerializers";
+
 export type FindingSeverity = "Safe" | "Review" | "Vulnerable" | "Info";
 
 export type FindingSource = "JavaScript" | "Tokens" | "SSL Header" | "Certificate";
@@ -40,10 +42,6 @@ export interface AnalysisSummary {
   vulnerableDetails: string[];
 }
 
-interface FormatFindingOptions {
-  includeEvidence?: boolean;
-}
-
 export const emptyAnalysisSummary = (): AnalysisSummary => ({
   total: 0,
   safe: 0,
@@ -62,58 +60,14 @@ export function summarizeFindings(findings: AnalysisFinding[]): AnalysisSummary 
       summary.safe += 1;
     } else if (finding.severity === "Review") {
       summary.review += 1;
-      summary.reviewDetails.push(formatFinding(finding));
+      summary.reviewDetails.push(summaryFindingSerializer.serializeFinding(finding));
     } else if (finding.severity === "Vulnerable") {
       summary.vulnerable += 1;
-      summary.vulnerableDetails.push(formatFinding(finding));
+      summary.vulnerableDetails.push(summaryFindingSerializer.serializeFinding(finding));
     } else {
       summary.informational += 1;
     }
 
     return summary;
   }, emptyAnalysisSummary());
-}
-
-export function formatFinding(
-  finding: AnalysisFinding,
-  { includeEvidence = true }: FormatFindingOptions = {}
-): string {
-  const location = finding.location ? ` in ${finding.location}` : "";
-  const evidence = includeEvidence && finding.evidence ? ` Evidence: ${finding.evidence}` : "";
-  const details = finding.details ? ` ${finding.details}` : "";
-
-  return `${finding.title} [${finding.severity}]${location}.${evidence}${details}`.trim();
-}
-
-export function formatFindingsForReport(findings: AnalysisFinding[]): string {
-  if (findings.length === 0) {
-    return "No findings were produced by this scan.";
-  }
-
-  return findings
-    .map(formatFindingForReport)
-    .join("\n");
-}
-
-export function formatFindingForReport(finding: AnalysisFinding): string {
-  const location = finding.location ? ` in ${finding.location}` : "";
-  const lines = [
-    `${finding.title} [${finding.severity}]${location}.`,
-    finding.ruleId ? `Rule ID: ${finding.ruleId}` : "",
-    finding.confidence ? `Confidence: ${finding.confidence}` : "",
-    finding.standardStatus ? `Standard status: ${finding.standardStatus}` : "",
-    finding.rationale ? `Rationale: ${finding.rationale}` : "",
-    finding.details ? `Details: ${finding.details}` : "",
-    finding.limitations ? `Limitations: ${finding.limitations}` : "",
-    finding.recommendation ? `Recommendation: ${finding.recommendation}` : "",
-    finding.references?.length ? `References: ${finding.references.join(", ")}` : "",
-    finding.updatedAt ? `Updated: ${finding.updatedAt}` : "",
-  ].filter(Boolean);
-
-  return lines.join("\n");
-}
-
-export function redactValue(label: string, value: string): string {
-  const normalizedLabel = label.trim() || "value";
-  return `[redacted ${normalizedLabel}, ${value.length} characters]`;
 }

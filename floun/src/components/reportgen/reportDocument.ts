@@ -1,4 +1,8 @@
-import { AnalysisFinding, FindingSeverity, formatFindingsForReport } from "../analysisFinding";
+import { AnalysisFinding, FindingSeverity } from "../analysisFinding";
+import {
+  pdfFindingSerializer,
+  promptFindingSerializer,
+} from "./findingSerializers";
 
 export type FindingGroups = Record<string, AnalysisFinding[]>;
 
@@ -58,8 +62,8 @@ export function countFindingsBySeverity(
   return findings.filter(finding => finding.severity === severity).length;
 }
 
-export function buildFindingsText(groups: FindingGroups): string {
-  return formatFindingsForReport(flattenFindingGroups(groups));
+export function buildPromptFindingsText(groups: FindingGroups): string {
+  return promptFindingSerializer.serializeFindings(flattenFindingGroups(groups));
 }
 
 export function fallbackSections(
@@ -125,6 +129,6 @@ function buildSeverityBreakdown(
 
 function buildAppendix(groups: FindingGroups): string {
   return Object.entries(groups)
-    .map(([group, findings]) => `${group} Results:\n${formatFindingsForReport(findings)}`)
+    .map(([group, findings]) => `${group} Results:\n${pdfFindingSerializer.serializeFindings(findings)}`)
     .join("\n\n");
 }

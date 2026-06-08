@@ -1,4 +1,5 @@
-import { AnalysisFinding, redactValue } from './analysisFinding';
+import { AnalysisFinding } from './analysisFinding';
+import { redactValue } from './evidenceRedaction';
 import {
   runBatchTokenChecks,
   runSingleTokenChecks,

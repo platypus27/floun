@@ -7,7 +7,7 @@ import { generateChatMessage, hasGeminiApiKey } from "./reportgen/geminiService"
 import {
   FindingGroups,
   ReportSections,
-  buildFindingsText,
+  buildPromptFindingsText,
   buildReportContent,
   countFindingsBySeverity,
   countVulnerableFindings,
@@ -17,7 +17,7 @@ import {
 } from "./reportgen/reportDocument";
 
 async function buildReportSections(groups: FindingGroups): Promise<ReportSections> {
-  const findingsText = buildFindingsText(groups);
+  const findingsText = buildPromptFindingsText(groups);
   const allFindings = flattenFindingGroups(groups);
   const vulnerableCount = countVulnerableFindings(allFindings);
   const reviewCount = countFindingsBySeverity(allFindings, "Review");

@@ -1,7 +1,8 @@
 import { AnalysisFinding } from "../analysisFinding";
+import { omittedEvidenceNotice } from "./findingSerializers";
 import {
   FindingGroups,
-  buildFindingsText,
+  buildPromptFindingsText,
   buildReportContent,
   fallbackSections,
 } from "./reportDocument";
@@ -47,15 +48,16 @@ const groupLabels = {
   Certificates: "Certificates",
 };
 
-test("buildFindingsText omits raw evidence", () => {
-  const findingsText = buildFindingsText(groups);
+test("buildPromptFindingsText uses report-owned evidence policy", () => {
+  const findingsText = buildPromptFindingsText(groups);
 
   expect(findingsText).toContain("Session token may be weak");
+  expect(findingsText).toContain(`Evidence: ${omittedEvidenceNotice}`);
   expect(findingsText).not.toContain("secret-token-value");
 });
 
 test("buildReportContent omits raw evidence from appendices", () => {
-  const sections = fallbackSections(buildFindingsText(groups), 1, 1);
+  const sections = fallbackSections(buildPromptFindingsText(groups), 1, 1);
   const content = buildReportContent(groups, sections, groupLabels);
 
   expect(content.appendix).toContain("Tokens Results");
@@ -65,6 +67,7 @@ test("buildReportContent omits raw evidence from appendices", () => {
   expect(content.appendix).toContain("Limitations: TLS API responses may omit negotiated group details.");
   expect(content.appendix).toContain("Recommendation: Review negotiated TLS behavior manually.");
   expect(content.appendix).toContain("References: https://www.cisa.gov/resources-tools/resources/quantum-readiness-migration-post-quantum-cryptography");
+  expect(content.appendix).toContain(`Evidence: ${omittedEvidenceNotice}`);
   expect(content.appendix).not.toContain("secret-token-value");
   expect(content.reviewMethodsCount).toBe(1);
   expect(content.reviewMethodsBreakdown).toBe("JS: 0, Tokens: 0, TLS: 1, Certificates: 0");

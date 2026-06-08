@@ -1,6 +1,6 @@
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
-import { ReportContent } from "./reportDocument";
+import type { ReportContent } from "./reportDocument";
 
 interface CoverDetails {
   title: string;
