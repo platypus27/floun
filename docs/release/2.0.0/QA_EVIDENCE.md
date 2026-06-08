@@ -50,8 +50,8 @@ Artifact safety checks:
 | `npm run release:artifact` | Pass | Verifies both release zips and matching SHA-256. |
 | `npm run store:check` | Pass | Store docs and PNG dimensions verified. |
 | deterministic packaging check | Pass | Two consecutive package runs produced matching SHA-256: `e69102b18d7573a00631428ef988e41791350b00b9970e202e8b7be7247b61c1`. |
-| `npm test` | Pass | 25 test files, 77 tests. |
-| publish readiness gate tests | Pass | `release:publish:check` is covered to fail while Manual Chrome QA rows remain blocked. |
+| `npm test` | Pass | 25 test files, 80 tests. |
+| publish readiness gate tests | Pass | `release:publish:check` is covered to fail while Manual Chrome QA rows remain blocked, reject missing required scenarios, reject placeholder Pass evidence, and pass with complete required manual QA evidence. |
 | report redaction pipeline tests | Pass | `createReport` fallback and Gemini prompt paths omit raw token evidence before PDF generation. |
 | scan client runtime-error tests | Pass | Active-tab query and background-message Chrome runtime errors surface their actual messages. |
 | page adapter normalization tests | Pass | Missing, primitive, malformed error, and malformed object page collector callback data are sanitized and surfaced as partial page scans instead of leaking invalid payloads. |

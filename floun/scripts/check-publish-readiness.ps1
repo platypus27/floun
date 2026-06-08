@@ -1,10 +1,27 @@
+param(
+  [string] $QaEvidencePath
+)
+
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $RepoRoot = Split-Path -Parent $ProjectRoot
 $PackagePath = Join-Path $ProjectRoot "package.json"
 $Package = Get-Content -Raw -LiteralPath $PackagePath | ConvertFrom-Json
-$QaEvidencePath = Join-Path $RepoRoot "docs\release\$($Package.version)\QA_EVIDENCE.md"
+
+if (-not $QaEvidencePath) {
+  $QaEvidencePath = Join-Path $RepoRoot "docs\release\$($Package.version)\QA_EVIDENCE.md"
+}
+
+$RequiredManualQaScenarios = @(
+  'Load `floun/build/` in Chrome extensions',
+  'Scan `http://127.0.0.1:4174/crypto-readiness.html`',
+  'Scan `https://www.cloudflare.com/`',
+  'Scan `http://example.com/`',
+  'Attempt unsupported page such as `chrome://extensions/`',
+  'Generate PDF report',
+  'Store package built without Gemini key'
+)
 
 if (-not (Test-Path -LiteralPath $QaEvidencePath)) {
   throw "Manual Chrome QA evidence is missing: $QaEvidencePath"
@@ -37,11 +54,44 @@ if ($Rows.Length -eq 0) {
   throw "Manual Chrome QA evidence table is missing or malformed."
 }
 
+$DuplicateScenarios = @(
+  $Rows |
+    Group-Object -Property Scenario |
+    Where-Object { $_.Count -gt 1 } |
+    ForEach-Object { $_.Name }
+)
+
+if ($DuplicateScenarios.Length -gt 0) {
+  throw "Manual Chrome QA has duplicate scenarios: $($DuplicateScenarios -join '; ')"
+}
+
+$Scenarios = @($Rows | ForEach-Object { $_.Scenario })
+$MissingScenarios = @($RequiredManualQaScenarios | Where-Object { $Scenarios -notcontains $_ })
+
+if ($MissingScenarios.Length -gt 0) {
+  throw "Manual Chrome QA is missing required Manual Chrome QA scenarios: $($MissingScenarios -join '; ')"
+}
+
 $IncompleteRows = @($Rows | Where-Object { $_.Result -ne "Pass" })
 
 if ($IncompleteRows.Length -gt 0) {
   $Details = ($IncompleteRows | ForEach-Object { "$($_.Scenario)=$($_.Result)" }) -join "; "
   throw "Manual Chrome QA is not publish-ready. Complete or fix these rows first: $Details"
+}
+
+$PlaceholderEvidencePattern = "(?i)\b(blocked|complete manually|requires loaded extension popup|automation cannot open|could not be completed)\b"
+$IncompleteEvidenceRows = @(
+  $Rows |
+    Where-Object {
+      $_.Evidence.Trim().Length -eq 0 -or
+      $_.Evidence.Trim() -eq "-" -or
+      $_.Evidence -match $PlaceholderEvidencePattern
+    }
+)
+
+if ($IncompleteEvidenceRows.Length -gt 0) {
+  $Details = ($IncompleteEvidenceRows | ForEach-Object { $_.Scenario }) -join "; "
+  throw "Manual Chrome QA has incomplete Manual Chrome QA evidence: $Details"
 }
 
 Write-Host "Publish readiness verified."
