@@ -50,12 +50,13 @@ Artifact safety checks:
 | `npm run release:artifact` | Pass | Verifies both release zips and matching SHA-256. |
 | `npm run store:check` | Pass | Store docs and PNG dimensions verified. |
 | deterministic packaging check | Pass | Two consecutive package runs produced matching SHA-256: `e69102b18d7573a00631428ef988e41791350b00b9970e202e8b7be7247b61c1`. |
-| `npm test` | Pass | 23 test files, 75 tests. |
+| `npm test` | Pass | 24 test files, 76 tests. |
 | report redaction pipeline tests | Pass | `createReport` fallback and Gemini prompt paths omit raw token evidence before PDF generation. |
 | scan client runtime-error tests | Pass | Active-tab query and background-message Chrome runtime errors surface their actual messages. |
 | page adapter normalization tests | Pass | Missing, primitive, malformed error, and malformed object page collector callback data are sanitized and surfaced as partial page scans instead of leaking invalid payloads. |
 | scan protocol runtime-guard tests | Pass | URL credentials, query strings, and fragments are stripped from new scan targets, and negative tab IDs, credential/query/fragment-bearing target URLs, malformed page headers, normalized TLS facts, certificate facts, adapter metadata, and warning arrays are rejected before adapters run or the popup accepts a success response. |
 | QA evidence consistency tests | Pass | `release:artifact` rejects stale QA evidence hashes, sizes, and archive entry lists before release readiness can pass. |
+| store readiness version tests | Pass | `store:check` derives the release evidence directory from `package.json` so future version changes cannot keep checking stale release docs. |
 | `npm run build` | Pass | Production Vite build. |
 | `npm audit --omit=dev` | Pass | 0 vulnerabilities. |
 | `npx tsc --noEmit` | Pass | TypeScript check. |

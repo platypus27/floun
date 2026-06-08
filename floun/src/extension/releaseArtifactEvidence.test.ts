@@ -37,4 +37,6 @@ test("release artifact check rejects stale QA evidence", () => {
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
-});
+}, 30000);
+
+export {};

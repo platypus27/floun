@@ -4,8 +4,10 @@ Add-Type -AssemblyName System.Drawing
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $RepoRoot = Split-Path -Parent $ProjectRoot
+$PackagePath = Join-Path $ProjectRoot "package.json"
+$Package = Get-Content -Raw -LiteralPath $PackagePath | ConvertFrom-Json
 $StoreDocsRoot = Join-Path $RepoRoot "docs\store"
-$ReleaseDocsRoot = Join-Path $RepoRoot "docs\release\2.0.0"
+$ReleaseDocsRoot = Join-Path $RepoRoot "docs\release\$($Package.version)"
 $StoreAssetsRoot = Join-Path $StoreDocsRoot "assets"
 
 $RequiredDocs = @(
