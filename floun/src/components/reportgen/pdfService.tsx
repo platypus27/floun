@@ -15,6 +15,12 @@ interface PdfFonts {
   bold: PDFFont;
 }
 
+interface ChromeRuntimeAssetApi {
+  runtime?: {
+    getURL?: (assetPath: string) => string;
+  };
+}
+
 const pageSize: [number, number] = [600, 800];
 const margin = 50;
 const bodyFontSize = 12;
@@ -128,7 +134,7 @@ async function drawCoverPage(
 
 async function loadDefaultLogoBase64(): Promise<string | null> {
   try {
-    const response = await fetch("icons/floun.png");
+    const response = await fetch(resolveReportAssetUrl("icons/floun.png"));
 
     if (!response.ok) {
       return null;
@@ -137,6 +143,20 @@ async function loadDefaultLogoBase64(): Promise<string | null> {
     return blobToDataUrl(await response.blob());
   } catch {
     return null;
+  }
+}
+
+export function resolveReportAssetUrl(
+  assetPath: string,
+  chromeApi: ChromeRuntimeAssetApi | undefined = (globalThis as typeof globalThis & {
+    chrome?: ChromeRuntimeAssetApi;
+  }).chrome
+): string {
+  try {
+    const resolvedUrl = chromeApi?.runtime?.getURL?.(assetPath);
+    return resolvedUrl || assetPath;
+  } catch {
+    return assetPath;
   }
 }
 

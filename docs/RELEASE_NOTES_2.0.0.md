@@ -34,6 +34,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Derived store readiness release evidence paths from `package.json` so future version changes cannot keep checking stale release docs.
 - Added a publish readiness gate that fails until every required Manual Chrome QA evidence row is present, completed, backed by non-placeholder evidence, and marked Pass.
 - Added automated report pipeline checks proving raw token evidence is omitted before PDF generation and Gemini prompt drafting.
+- Hardened report logo loading to resolve packaged assets through the Chrome extension runtime when available.
 - Expanded release artifact safety checks to reject raw QA fixture tokens and source/test/dev files in the packaged ZIP.
 - Hardened popup scan-client error handling for Chrome active-tab query and background-message runtime failures.
 - Hardened the page scan adapter to sanitize malformed injected collector data before it enters the scan payload.
