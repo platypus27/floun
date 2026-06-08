@@ -39,17 +39,42 @@ test("returns complete metadata for certificate lookup data", async () => {
   const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ result: { cert_alg: "sha256WithRSAEncryption" } }));
 
   await expect(fetchCertificateScan(httpsTarget, { fetchImpl: fetchMock as unknown as typeof fetch })).resolves.toMatchObject({
-    data: { result: { cert_alg: "sha256WithRSAEncryption" } },
+    data: {
+      provider: "ssl-checker",
+      signatureAlgorithm: "sha256WithRSAEncryption",
+    },
     meta: { status: "complete" },
   });
 });
 
-test("returns unavailable metadata for empty, HTTP-failed, and thrown certificate lookups", async () => {
+test("normalizes top-level certificate lookup algorithms", async () => {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ cert_alg: " Dilithium3 " }));
+
+  await expect(fetchCertificateScan(httpsTarget, { fetchImpl: fetchMock as unknown as typeof fetch })).resolves.toMatchObject({
+    data: {
+      provider: "ssl-checker",
+      signatureAlgorithm: "Dilithium3",
+    },
+    meta: { status: "complete" },
+  });
+});
+
+test("returns unavailable metadata for empty, missing-algorithm, HTTP-failed, and thrown certificate lookups", async () => {
   const emptyFetch = vi.fn().mockResolvedValue(jsonResponse({}));
+  const nullFetch = vi.fn().mockResolvedValue(jsonResponse(null));
+  const missingAlgorithmFetch = vi.fn().mockResolvedValue(jsonResponse({ result: { cert_alg: "" } }));
   const httpFetch = vi.fn().mockResolvedValue(jsonResponse({}, { ok: false, status: 500 }));
   const thrownFetch = vi.fn().mockRejectedValue(new Error("Certificate API unavailable"));
 
   await expect(fetchCertificateScan(httpsTarget, { fetchImpl: emptyFetch as unknown as typeof fetch })).resolves.toMatchObject({
+    data: null,
+    meta: { status: "unavailable", message: "Certificate lookup returned no usable data." },
+  });
+  await expect(fetchCertificateScan(httpsTarget, { fetchImpl: nullFetch as unknown as typeof fetch })).resolves.toMatchObject({
+    data: null,
+    meta: { status: "unavailable", message: "Certificate lookup returned no usable data." },
+  });
+  await expect(fetchCertificateScan(httpsTarget, { fetchImpl: missingAlgorithmFetch as unknown as typeof fetch })).resolves.toMatchObject({
     data: null,
     meta: { status: "unavailable", message: "Certificate lookup returned no usable data." },
   });

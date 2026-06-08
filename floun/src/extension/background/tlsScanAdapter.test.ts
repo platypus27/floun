@@ -19,10 +19,60 @@ const jsonResponse = (
 }) as unknown as Response;
 
 test("returns complete metadata when SSL Labs is ready", async () => {
-  const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ status: "READY", endpoints: [] }));
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+    status: "READY",
+    endpoints: [{
+      details: {
+        protocols: [
+          { id: 771, name: "TLS", version: "1.2" },
+          { id: 772, name: "TLS", version: "1.3" },
+          { id: 0, name: "TLS", version: "" },
+        ],
+        suites: [
+          {
+            protocol: 772,
+            list: [
+              { name: "TLS_AES_128_GCM_SHA256" },
+              { name: "TLS_KYBER768" },
+              { name: "" },
+            ],
+          },
+        ],
+      },
+    }],
+  }));
 
   await expect(fetchTlsScan(target, { fetchImpl: fetchMock as unknown as typeof fetch })).resolves.toMatchObject({
-    data: { status: "READY", endpoints: [] },
+    data: {
+      provider: "ssl-labs",
+      endpoints: [{
+        protocolVersions: ["1.2", "1.3"],
+        cipherSuites: ["TLS_AES_128_GCM_SHA256", "TLS_KYBER768"],
+      }],
+    },
+    meta: { status: "complete" },
+  });
+});
+
+test("normalizes malformed SSL Labs endpoint details without leaking raw JSON", async () => {
+  const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+    status: "READY",
+    endpoints: [
+      { details: { protocols: "not an array", suites: [{ list: "not an array" }] } },
+      { details: { suites: [{ list: [{ name: 123 }, { name: "TLS_KYBER768" }] }] } },
+      "malformed endpoint",
+    ],
+  }));
+
+  await expect(fetchTlsScan(target, { fetchImpl: fetchMock as unknown as typeof fetch })).resolves.toMatchObject({
+    data: {
+      provider: "ssl-labs",
+      endpoints: [
+        { protocolVersions: [], cipherSuites: [] },
+        { protocolVersions: [], cipherSuites: ["TLS_KYBER768"] },
+        { protocolVersions: [], cipherSuites: [] },
+      ],
+    },
     meta: { status: "complete" },
   });
 });

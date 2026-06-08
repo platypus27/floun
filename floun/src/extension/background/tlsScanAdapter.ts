@@ -1,6 +1,6 @@
 import { getErrorMessage } from "./errors";
 import { completeMeta, partialMeta, unavailableMeta } from "./scanMeta";
-import type { ScanAdapterResult, ScanTarget } from "../scanTypes";
+import type { ScanAdapterResult, ScanTarget, TlsScanData } from "../scanTypes";
 
 const TLS_SCAN = Object.freeze({
   maxAttempts: 15,
@@ -16,9 +16,81 @@ interface TlsScanOptions {
   delayFn?: (ms: number) => Promise<void>;
 }
 
+interface SslLabsProtocol {
+  version?: unknown;
+}
+
+interface SslLabsCipher {
+  name?: unknown;
+}
+
+interface SslLabsSuite {
+  list?: unknown;
+}
+
+interface SslLabsEndpointDetails {
+  protocols?: unknown;
+  suites?: unknown;
+}
+
+interface SslLabsEndpoint {
+  details?: SslLabsEndpointDetails;
+}
+
+interface SslLabsResponse {
+  status?: string;
+  statusMessage?: string;
+  endpoints?: unknown;
+}
+
 const delay = (ms: number): Promise<void> => (
   new Promise((resolve) => setTimeout(resolve, ms))
 );
+
+const normalizeString = (value: unknown): string | null => (
+  typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : null
+);
+
+const normalizeStringList = <TValue>(
+  values: unknown,
+  selector: (value: TValue) => unknown
+): string[] => (
+  Array.isArray(values)
+    ? values
+      .map(value => normalizeString(selector(value as TValue)))
+      .filter((value): value is string => Boolean(value))
+    : []
+);
+
+const asProviderObject = (value: unknown): Record<string, unknown> => (
+  value && typeof value === "object" ? value as Record<string, unknown> : {}
+);
+
+function normalizeTlsScanData(data: unknown): TlsScanData {
+  const response = asProviderObject(data) as SslLabsResponse;
+  const endpoints = Array.isArray(response.endpoints) ? response.endpoints : [];
+
+  return {
+    provider: "ssl-labs",
+    endpoints: endpoints.map(endpoint => {
+      const details = (endpoint as SslLabsEndpoint | null)?.details;
+      const protocolVersions = normalizeStringList<SslLabsProtocol>(
+        details?.protocols,
+        protocol => protocol.version
+      );
+      const cipherSuites = Array.isArray(details?.suites)
+        ? details.suites.flatMap(suite => normalizeStringList<SslLabsCipher>(
+          (suite as SslLabsSuite).list,
+          cipher => cipher.name
+        ))
+        : [];
+
+      return { protocolVersions, cipherSuites };
+    }),
+  };
+}
 
 export async function fetchTlsScan(
   target: ScanTarget,
@@ -28,7 +100,7 @@ export async function fetchTlsScan(
     pollDelayMs = TLS_SCAN.pollDelayMs,
     delayFn = delay,
   }: TlsScanOptions = {}
-): Promise<ScanAdapterResult<unknown | null>> {
+): Promise<ScanAdapterResult<TlsScanData | null>> {
   const apiUrl = `https://api.ssllabs.com/api/v3/analyze?host=${encodeURIComponent(target.hostname)}&all=done`;
 
   try {
@@ -42,10 +114,10 @@ export async function fetchTlsScan(
         };
       }
 
-      const data = await response.json() as { status?: string; statusMessage?: string };
+      const data = asProviderObject(await response.json()) as SslLabsResponse;
 
       if (data.status === "READY") {
-        return { data, meta: completeMeta() };
+        return { data: normalizeTlsScanData(data), meta: completeMeta() };
       }
 
       if (data.status === "ERROR") {

@@ -3,16 +3,18 @@ import { executePageScan } from "./pageScanAdapter";
 import { buildScanMeta } from "./scanMeta";
 import { fetchTlsScan } from "./tlsScanAdapter";
 import type {
+  CertificateScanData,
   PageScanData,
   ScanAdapterResult,
   ScanPayload,
   ScanTarget,
+  TlsScanData,
 } from "../scanTypes";
 
 export interface ScanAdapters {
   page: (target: ScanTarget) => Promise<ScanAdapterResult<PageScanData>>;
-  tls: (target: ScanTarget) => Promise<ScanAdapterResult<unknown | null>>;
-  certificates: (target: ScanTarget) => Promise<ScanAdapterResult<unknown | null>>;
+  tls: (target: ScanTarget) => Promise<ScanAdapterResult<TlsScanData | null>>;
+  certificates: (target: ScanTarget) => Promise<ScanAdapterResult<CertificateScanData | null>>;
 }
 
 export const defaultScanAdapters: ScanAdapters = {

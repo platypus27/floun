@@ -28,9 +28,24 @@ export interface PageScanData {
   tokens: string[];
 }
 
+export interface TlsEndpointScanData {
+  protocolVersions: string[];
+  cipherSuites: string[];
+}
+
+export interface TlsScanData {
+  provider: "ssl-labs";
+  endpoints: TlsEndpointScanData[];
+}
+
+export interface CertificateScanData {
+  provider: "ssl-checker";
+  signatureAlgorithm: string;
+}
+
 export interface ScanPayload extends PageScanData {
-  TLS: unknown;
-  certificates: unknown;
+  TLS: TlsScanData | null;
+  certificates: CertificateScanData | null;
   scanMeta: ScanMeta;
 }
 

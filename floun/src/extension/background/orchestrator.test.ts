@@ -18,25 +18,30 @@ test("combines adapter data and warnings into a scan payload", async () => {
       meta: { status: "complete" },
     }),
     tls: vi.fn().mockResolvedValue({
-      data: null,
-      meta: { status: "partial", message: "TLS still running" },
+      data: {
+        provider: "ssl-labs",
+        endpoints: [{ protocolVersions: ["1.3"], cipherSuites: ["TLS_KYBER768"] }],
+      },
+      meta: { status: "complete" },
     }),
     certificates: vi.fn().mockResolvedValue({
-      data: null,
+      data: { provider: "ssl-checker", signatureAlgorithm: "sha256WithRSAEncryption" },
       meta: { status: "unavailable", message: "Certificate API unavailable" },
     }),
   });
 
   expect(payload).toMatchObject({
     tokens: ["token"],
-    TLS: null,
-    certificates: null,
+    TLS: {
+      provider: "ssl-labs",
+      endpoints: [{ protocolVersions: ["1.3"], cipherSuites: ["TLS_KYBER768"] }],
+    },
+    certificates: { provider: "ssl-checker", signatureAlgorithm: "sha256WithRSAEncryption" },
     scanMeta: {
       page: { status: "complete" },
-      tls: { status: "partial", message: "TLS still running" },
+      tls: { status: "complete" },
       certificates: { status: "unavailable", message: "Certificate API unavailable" },
       warnings: [
-        "TLS scan partial: TLS still running",
         "Certificate scan unavailable: Certificate API unavailable",
       ],
     },

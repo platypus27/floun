@@ -31,14 +31,13 @@ test('renders expandable finding rows with structured explanation fields', async
     tokens: ['secretRawToken'],
     headers: {},
     TLS: {
+      provider: 'ssl-labs',
       endpoints: [{
-        details: {
-          protocols: [{ id: 772, name: 'TLS', version: '1.3' }],
-          suites: [{ protocol: 772, list: [{ name: 'TLS_AES_128_GCM_SHA256' }] }],
-        },
+        protocolVersions: ['1.3'],
+        cipherSuites: ['TLS_AES_128_GCM_SHA256'],
       }],
     },
-    certificates: { result: { cert_alg: 'sha256WithRSAEncryption' } },
+    certificates: { provider: 'ssl-checker', signatureAlgorithm: 'sha256WithRSAEncryption' },
     scanMeta: {
       page: { status: 'complete' },
       tls: { status: 'complete' },

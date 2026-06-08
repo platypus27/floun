@@ -9,11 +9,10 @@ test("returns an informational finding when TLS data is missing", () => {
 
 test("classifies post-quantum TLS cipher suites as safe", () => {
   const findings = HeaderSecurityCheck({
+    provider: "ssl-labs",
     endpoints: [{
-      details: {
-        protocols: [{ id: 772, name: "TLS", version: "1.3" }],
-        suites: [{ protocol: 772, list: [{ name: "TLS_KYBER768" }] }],
-      },
+      protocolVersions: ["1.3"],
+      cipherSuites: ["TLS_KYBER768"],
     }],
   });
 
@@ -30,11 +29,10 @@ test("classifies post-quantum TLS cipher suites as safe", () => {
 
 test("classifies unlisted TLS cipher suites as review migration signals", () => {
   const findings = HeaderSecurityCheck({
+    provider: "ssl-labs",
     endpoints: [{
-      details: {
-        protocols: [{ id: 772, name: "TLS", version: "1.3" }],
-        suites: [{ protocol: 772, list: [{ name: "TLS_AES_128_GCM_SHA256" }] }],
-      },
+      protocolVersions: ["1.3"],
+      cipherSuites: ["TLS_AES_128_GCM_SHA256"],
     }],
   });
 
