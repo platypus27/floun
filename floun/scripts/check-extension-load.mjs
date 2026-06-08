@@ -127,6 +127,30 @@ export function summarizeLoadFailure({
   return lines.join("\n");
 }
 
+export async function removeDirectoryWithRetries(
+  directoryPath,
+  {
+    attempts = 8,
+    delayMs = 250,
+    delayFn = sleep,
+    rmImpl = rmSync,
+  } = {}
+) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      rmImpl(directoryPath, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      lastError = error;
+      await delayFn(delayMs);
+    }
+  }
+
+  throw lastError;
+}
+
 function findBrowserBinary() {
   const explicitCandidates = [
     process.env.FLOUN_CHROME_BIN,
@@ -359,7 +383,7 @@ async function runExtensionLoadCheck({
   } finally {
     killBrowserProfileProcesses(profile, child);
     await sleep(500);
-    rmSync(profile, { recursive: true, force: true });
+    await removeDirectoryWithRetries(profile);
   }
 }
 

@@ -48,6 +48,15 @@ npm run qa:extension:load
 
 If branded Google Chrome reports that extension-load flags are not allowed, point `FLOUN_CHROME_BIN` at Chrome for Testing or Chromium, or complete the manual `chrome://extensions` load.
 
+To run the full Chrome for Testing popup-flow QA pass:
+
+```bash
+cd floun
+npm run qa:chrome:flows
+```
+
+This drives the extension action on tab targets, scans the local fixture, scans a known HTTPS page, scans an HTTP page, checks unsupported-page handling, downloads a PDF report, and verifies raw fixture tokens are absent from the PDF bytes.
+
 ## Optional Gemini Report Text
 
 PDF reports work without an AI key by using local fallback text. To enable Gemini-generated sections, copy `floun/.env.example` to `floun/.env.local` and set:

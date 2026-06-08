@@ -70,7 +70,15 @@ function runWithQaEvidence(rows: Array<{ scenario: string; result: string; evide
 }
 
 test("publish readiness check rejects blocked manual Chrome QA", () => {
-  const { errorMessage } = runPublishReadinessCheck();
+  const { errorMessage } = runWithQaEvidence(
+    manualQaScenarios.map((scenario, index) => ({
+      scenario,
+      result: index === 0 ? "Blocked" : "Pass",
+      evidence: index === 0
+        ? "Requires loaded extension popup; complete manually."
+        : `Verified manually for ${scenario}.`,
+    }))
+  );
 
   expect(errorMessage).toMatch(/Manual Chrome QA/i);
   expect(errorMessage).toMatch(/Load `floun\/build\/` in Chrome\s+extensions=Blocked/);

@@ -86,3 +86,23 @@ test("summarizes unsupported branded Chrome with a concrete next step", async ()
     ],
   })).toContain("Use Chrome for Testing or Chromium for automated extension-load QA, or load the unpacked build manually from chrome://extensions.");
 });
+
+test("removeDirectoryWithRetries retries transient Windows cleanup errors", async () => {
+  const { removeDirectoryWithRetries } = await loadExtensionCheckModule();
+  let attempts = 0;
+
+  await removeDirectoryWithRetries("C:\\temp\\floun-profile", {
+    delayFn: async () => undefined,
+    rmImpl: () => {
+      attempts += 1;
+
+      if (attempts < 3) {
+        throw Object.assign(new Error("EPERM"), { code: "EPERM" });
+      }
+    },
+  });
+
+  expect(attempts).toBe(3);
+});
+
+export {};

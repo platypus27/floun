@@ -44,6 +44,8 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Hardened page collector error handling so primitive or malformed callback values become partial scan warnings rather than adapter crashes or invalid metadata.
 - Hardened scan response validation so the popup rejects malformed page headers, normalized TLS facts, certificate facts, adapter metadata, and warning arrays.
 - Added an opt-in extension-load QA helper that recognizes Floun in an isolated browser profile and reports the branded Google Chrome command-line extension-loading limitation with a concrete Chrome for Testing / Chromium next step.
+- Fixed PDF report generation when the default logo asset has an unexpected image encoding, and switched the default report logo to the valid packaged PNG icon.
+- Added a Chrome for Testing popup-flow QA helper that drives the real extension action, scans release targets, downloads a PDF, and verifies raw fixture tokens are absent from the PDF bytes.
 
 ## Verification Commands
 
@@ -56,6 +58,7 @@ npm run release:artifact
 npm run release:determinism
 npm run store:check
 npm run qa:extension:load
+npm run qa:chrome:flows
 npm run release:ready
 npm test
 npm run build
@@ -76,6 +79,8 @@ Chrome Web Store prep material lives under `docs/store/`.
 `npm run release:publish:check` is intentionally stricter than the scripted release-prep checks. It runs release readiness and then fails until every required Manual Chrome QA evidence row is present, marked Pass, and backed by non-placeholder evidence.
 
 `npm run qa:extension:load` is optional and intended for local release QA. It requires Chrome for Testing or Chromium when automated command-line extension loading is needed; branded Google Chrome 137+ removed or restricted the relevant unpacked-extension flags, so a manual `chrome://extensions` load remains valid release evidence.
+
+`npm run qa:chrome:flows` is optional and intended for local release QA. It uses Chrome for Testing / Chromium CDP extension commands to trigger Floun from real tab targets, then verifies scan and report flows without adding runtime dependencies or extension permissions.
 
 ## Manual QA Targets
 
