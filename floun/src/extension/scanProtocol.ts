@@ -88,6 +88,14 @@ const parseUrl = (value: unknown): URL | null => {
   }
 };
 
+const stripUrlCredentials = (url: URL): URL => {
+  const sanitizedUrl = new URL(url.href);
+  sanitizedUrl.username = "";
+  sanitizedUrl.password = "";
+
+  return sanitizedUrl;
+};
+
 const isScanPayload = (value: unknown): value is ScanPayload => {
   if (!isRecord(value)) {
     return false;
@@ -103,6 +111,7 @@ const isScanPayload = (value: unknown): value is ScanPayload => {
 
 export function buildScanTarget(url: string, tabId: number): ScanTarget {
   const parsedUrl = new URL(url);
+  const sanitizedUrl = stripUrlCredentials(parsedUrl);
 
   if (!isValidTabId(tabId) || !["http:", "https:"].includes(parsedUrl.protocol) || !parsedUrl.hostname) {
     throw new Error("Floun can scan HTTP and HTTPS tabs only.");
@@ -110,10 +119,10 @@ export function buildScanTarget(url: string, tabId: number): ScanTarget {
 
   return {
     tabId,
-    protocol: parsedUrl.protocol,
-    hostname: parsedUrl.hostname,
-    pageOrigin: parsedUrl.origin,
-    url: parsedUrl.href,
+    protocol: sanitizedUrl.protocol,
+    hostname: sanitizedUrl.hostname,
+    pageOrigin: sanitizedUrl.origin,
+    url: sanitizedUrl.href,
   };
 }
 
@@ -136,6 +145,8 @@ export function isValidScanTarget(target: unknown): target is ScanTarget {
     parsedUrl &&
     parsedOrigin &&
     ["http:", "https:"].includes(candidate.protocol) &&
+    parsedUrl.username === "" &&
+    parsedUrl.password === "" &&
     candidate.protocol === parsedUrl.protocol &&
     candidate.protocol === parsedOrigin.protocol &&
     candidate.hostname.length > 0 &&

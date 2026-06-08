@@ -44,9 +44,17 @@ test("builds and validates scan targets from web URLs", () => {
     pageOrigin: "https://example.com",
     url: "https://example.com/path?query=1",
   });
+  expect(buildScanTarget("https://user:pass@example.com/path?query=1", 7)).toEqual({
+    tabId: 7,
+    protocol: "https:",
+    hostname: "example.com",
+    pageOrigin: "https://example.com",
+    url: "https://example.com/path?query=1",
+  });
 
   expect(isValidScanTarget(target)).toBe(true);
   expect(isValidScanTarget({ ...target, url: "" })).toBe(false);
+  expect(isValidScanTarget({ ...target, url: "https://user:pass@example.com/path" })).toBe(false);
   expect(isValidScanTarget({ ...target, hostname: "other.example" })).toBe(false);
   expect(isValidScanTarget({ ...target, pageOrigin: "https://other.example" })).toBe(false);
   expect(isValidScanTarget({ ...target, protocol: "http:" })).toBe(false);
