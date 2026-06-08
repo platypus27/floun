@@ -20,6 +20,7 @@ Floun 2.0.0 is a lightweight crypto-readiness release candidate. It strengthens 
 - Removed unused future-domain analysis placeholders from the release source tree.
 - Made release ZIP packaging deterministic so repeated packaging of unchanged build output preserves the artifact hash.
 - Validated packaged manifest permissions and background worker settings directly inside the release ZIP artifact.
+- Validated packaged manifest, popup HTML, and background worker asset references directly inside the release ZIP artifact.
 
 ## Verification Commands
 

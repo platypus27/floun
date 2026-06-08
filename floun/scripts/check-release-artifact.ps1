@@ -82,6 +82,121 @@ function Read-ZipEntryText {
   }
 }
 
+function Convert-ToZipEntryPath {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $Reference
+  )
+
+  $Path = ($Reference -replace "[?#].*$", "").Trim()
+
+  if ($Path -match "^(?:https?|data|chrome|mailto):") {
+    return $null
+  }
+
+  $Path = $Path.TrimStart("/")
+
+  while ($Path.StartsWith("./")) {
+    $Path = $Path.Substring(2)
+  }
+
+  if ($Path.StartsWith("../")) {
+    throw "Release artifact contains unsupported parent-relative reference: $Reference"
+  }
+
+  return $Path
+}
+
+function Assert-ZipEntryExists {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $Label,
+
+    [Parameter(Mandatory = $true)]
+    [string] $Reference,
+
+    [Parameter(Mandatory = $true)]
+    [string[]] $NormalizedEntries
+  )
+
+  $EntryName = Convert-ToZipEntryPath -Reference $Reference
+
+  if ($EntryName -and $NormalizedEntries -notcontains $EntryName) {
+    throw "$Label references missing release artifact entry: $Reference"
+  }
+}
+
+function Assert-PackagedIndexReferences {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $IndexHtml,
+
+    [Parameter(Mandatory = $true)]
+    [string[]] $NormalizedEntries
+  )
+
+  $References = [regex]::Matches($IndexHtml, '(?:src|href)=["''](?<path>[^"'']+)["'']')
+
+  foreach ($Reference in $References) {
+    Assert-ZipEntryExists `
+      -Label "Packaged index.html" `
+      -Reference $Reference.Groups["path"].Value `
+      -NormalizedEntries $NormalizedEntries
+  }
+}
+
+function Assert-PackagedBackgroundReferences {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $BackgroundJs,
+
+    [Parameter(Mandatory = $true)]
+    [string[]] $NormalizedEntries
+  )
+
+  $References = [regex]::Matches($BackgroundJs, '["''](?<path>\./assets/[^"'']+)["'']')
+
+  foreach ($Reference in $References) {
+    Assert-ZipEntryExists `
+      -Label "Packaged background.js" `
+      -Reference $Reference.Groups["path"].Value `
+      -NormalizedEntries $NormalizedEntries
+  }
+}
+
+function Assert-PackagedManifestReferences {
+  param(
+    [Parameter(Mandatory = $true)]
+    $Manifest,
+
+    [Parameter(Mandatory = $true)]
+    [string[]] $NormalizedEntries
+  )
+
+  Assert-ZipEntryExists `
+    -Label "Packaged manifest default_popup" `
+    -Reference $Manifest.action.default_popup `
+    -NormalizedEntries $NormalizedEntries
+  Assert-ZipEntryExists `
+    -Label "Packaged manifest background service_worker" `
+    -Reference $Manifest.background.service_worker `
+    -NormalizedEntries $NormalizedEntries
+
+  foreach ($IconPath in @($Manifest.icons.PSObject.Properties.Value)) {
+    Assert-ZipEntryExists `
+      -Label "Packaged manifest icons" `
+      -Reference $IconPath `
+      -NormalizedEntries $NormalizedEntries
+  }
+
+  foreach ($IconPath in @($Manifest.action.default_icon.PSObject.Properties.Value)) {
+    Assert-ZipEntryExists `
+      -Label "Packaged manifest action default_icon" `
+      -Reference $IconPath `
+      -NormalizedEntries $NormalizedEntries
+  }
+}
+
 function Test-ReleaseZip {
   param(
     [Parameter(Mandatory = $true)]
@@ -142,6 +257,16 @@ function Test-ReleaseZip {
     if ($Manifest.background.type -ne "module") {
       throw "Packaged manifest background worker must be a module."
     }
+
+    Assert-PackagedManifestReferences -Manifest $Manifest -NormalizedEntries $NormalizedEntries
+
+    $IndexEntry = $Zip.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "index.html" } | Select-Object -First 1
+    $IndexHtml = Read-ZipEntryText -Entry $IndexEntry
+    Assert-PackagedIndexReferences -IndexHtml $IndexHtml -NormalizedEntries $NormalizedEntries
+
+    $BackgroundEntry = $Zip.Entries | Where-Object { $_.FullName.Replace("\", "/") -eq "background.js" } | Select-Object -First 1
+    $BackgroundJs = Read-ZipEntryText -Entry $BackgroundEntry
+    Assert-PackagedBackgroundReferences -BackgroundJs $BackgroundJs -NormalizedEntries $NormalizedEntries
 
     foreach ($Entry in $Zip.Entries) {
       $EntryName = $Entry.FullName.Replace("\", "/")

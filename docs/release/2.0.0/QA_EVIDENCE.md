@@ -33,6 +33,7 @@ Artifact safety checks:
 
 - Canonical and alias zips have matching SHA-256 hashes.
 - Packaged manifest is MV3, version `2.0.0`, uses only `activeTab` and `scripting`, uses only SSL Labs / ssl-checker host permissions, keeps `background.js` as a module worker, and has no `content_scripts`.
+- Packaged manifest, popup HTML, and background worker references resolve to entries present inside the release ZIP.
 - No `.env` entries.
 - No QA fixture HTML.
 - No raw fixture token values.
