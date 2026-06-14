@@ -8,6 +8,7 @@ test("keeps extension permissions scoped to active scans and API hosts", () => {
   expect(hostPermissions).toEqual([
     "https://api.ssllabs.com/*",
     "https://ssl-checker.io/*",
+    "https://api.deepseek.com/*",
   ]);
   expect(hostPermissions).not.toContain("<all_urls>");
   expect(hostPermissions).not.toContain("file://*/*");

@@ -15,7 +15,7 @@ const manualQaScenarios = [
   "Scan `http://example.com/`",
   "Attempt unsupported page such as `chrome://extensions/`",
   "Generate PDF report",
-  "Store package built without Gemini key",
+  "Store package built without AI key",
 ];
 
 function runPublishReadinessCheck(extraArgs: string[] = []) {

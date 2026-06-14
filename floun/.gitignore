@@ -69,3 +69,6 @@ src/shodankey.tsx
 
 src/components/reportgen/key.ts
 src/components/reportgen/key.tsx
+
+# Local-only build tooling (e.g., floun/.local/bin/zip on hosts without a system zip)
+.local/

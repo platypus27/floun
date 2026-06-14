@@ -58,16 +58,17 @@ $ForbiddenText = @(
   "QABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890==",
   "secretRawToken",
   "secret-token-value",
-  "REACT_APP_GEMINI_API_KEY="
+  "VITE_DEEPSEEK_API_KEY="
 )
 
 $TextExtensions = @(".css", ".html", ".js", ".json", ".txt")
 $AllowedEntryExtensions = @(".css", ".html", ".ico", ".js", ".json", ".png", ".txt")
-$GeminiKeyPattern = "AIza[0-9A-Za-z_-]{20,}"
+$AIKeyPattern = "(?:AIza[0-9A-Za-z_-]{20,}|sk-[0-9A-Za-z_-]{20,})"
 $ExpectedPermissions = @("activeTab", "scripting")
 $ExpectedHostPermissions = @(
   "https://api.ssllabs.com/*",
-  "https://ssl-checker.io/*"
+  "https://ssl-checker.io/*",
+  "https://api.deepseek.com/*"
 )
 $ExpectedExtensionPagesCsp = "script-src 'self'; object-src 'self';"
 $ExpectedManifestTopLevelKeys = @(
@@ -536,8 +537,8 @@ function Test-ReleaseZip {
         throw "Release artifact contains forbidden external CSS reference in $EntryName"
       }
 
-      if ($Content -match $GeminiKeyPattern) {
-        throw "Release artifact contains a Gemini API-key-like value in $EntryName"
+      if ($Content -match $AIKeyPattern) {
+        throw "Release artifact contains an AI API-key-like value in $EntryName"
       }
     }
   } finally {
