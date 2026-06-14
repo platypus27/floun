@@ -1,12 +1,12 @@
 import type { AnalysisModuleResult } from "./analysisModules";
 import { createReport } from "./ai-handler";
 import { omittedEvidenceNotice } from "./reportgen/findingSerializers";
-import { generateChatMessage, hasGeminiApiKey } from "./reportgen/geminiService";
+import { generateChatMessage, hasDeepseekApiKey } from "./reportgen/deepseekService";
 import { generatePDFReport } from "./reportgen/pdfService";
 
-vi.mock("./reportgen/geminiService", () => ({
+vi.mock("./reportgen/deepseekService", () => ({
   generateChatMessage: vi.fn(),
-  hasGeminiApiKey: vi.fn(),
+  hasDeepseekApiKey: vi.fn(),
 }));
 
 vi.mock("./reportgen/pdfService", () => ({
@@ -50,12 +50,12 @@ const moduleResults: AnalysisModuleResult[] = [
 
 beforeEach(() => {
   vi.mocked(generateChatMessage).mockReset();
-  vi.mocked(hasGeminiApiKey).mockReset();
+  vi.mocked(hasDeepseekApiKey).mockReset();
   vi.mocked(generatePDFReport).mockReset();
 });
 
 test("createReport passes redacted fallback report content to PDF generation", async () => {
-  vi.mocked(hasGeminiApiKey).mockReturnValue(false);
+  vi.mocked(hasDeepseekApiKey).mockReturnValue(false);
 
   await createReport(moduleResults);
 
@@ -71,8 +71,8 @@ test("createReport passes redacted fallback report content to PDF generation", a
   expect(serializedContent).not.toContain(rawToken);
 });
 
-test("createReport sends redacted findings to Gemini prompts when local AI drafting is configured", async () => {
-  vi.mocked(hasGeminiApiKey).mockReturnValue(true);
+test("createReport sends redacted findings to DeepSeek prompts when local AI drafting is configured", async () => {
+  vi.mocked(hasDeepseekApiKey).mockReturnValue(true);
   vi.mocked(generateChatMessage).mockResolvedValue("generated section");
 
   await createReport(moduleResults);

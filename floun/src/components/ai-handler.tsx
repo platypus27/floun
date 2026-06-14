@@ -3,7 +3,7 @@ import {
   buildFindingGroupLabels,
   buildFindingGroups,
 } from "./analysisModules";
-import { generateChatMessage, hasGeminiApiKey } from "./reportgen/geminiService";
+import { generateChatMessage, hasDeepseekApiKey } from "./reportgen/deepseekService";
 import {
   FindingGroups,
   ReportSections,
@@ -22,7 +22,7 @@ async function buildReportSections(groups: FindingGroups): Promise<ReportSection
   const vulnerableCount = countVulnerableFindings(allFindings);
   const reviewCount = countFindingsBySeverity(allFindings, "Review");
 
-  if (!hasGeminiApiKey()) {
+  if (!hasDeepseekApiKey()) {
     return fallbackSections(findingsText, vulnerableCount, reviewCount);
   }
 
