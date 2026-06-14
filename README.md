@@ -9,7 +9,7 @@ Floun is a lightweight Chrome extension that scans the active website for crypto
 - Scans active tabs for JavaScript cryptography patterns, session-token signals, TLS cipher suites, and certificate signature algorithms.
 - Summarizes findings as safe, review, vulnerable, or informational.
 - Generates PDF reports with redacted findings.
-- Supports optional Gemini-drafted report sections through a local environment variable.
+- Supports optional DeepSeek-drafted report sections through a local environment variable.
 
 ## Development
 
@@ -57,12 +57,12 @@ npm run qa:chrome:flows
 
 This drives the extension action on tab targets, scans the local fixture, scans a known HTTPS page, scans an HTTP page, checks unsupported-page handling, downloads a PDF report, and verifies raw fixture tokens are absent from the PDF bytes.
 
-## Optional Gemini Report Text
+## Optional DeepSeek Report Text
 
-PDF reports work without an AI key by using local fallback text. To enable Gemini-generated sections, copy `floun/.env.example` to `floun/.env.local` and set:
+PDF reports work without an AI key by using local fallback text. To enable DeepSeek-drafted sections, copy `floun/.env.example` to `floun/.env.local` and set:
 
 ```bash
-REACT_APP_GEMINI_API_KEY=your-key-here
+VITE_DEEPSEEK_API_KEY=your-deepseek-key-here
 ```
 
 Do not commit `.env.local` or API key files.
@@ -84,7 +84,7 @@ Then scan `http://127.0.0.1:4174/crypto-readiness.html`.
 
 ## Privacy
 
-Floun stores scan data locally in the browser extension flow. If Gemini report drafting is configured, findings are redacted before being sent for report-section drafting. Raw tokens are not included in generated prompts or report appendices.
+Floun stores scan data locally in the browser extension flow. If DeepSeek report drafting is configured, findings are redacted before being sent for report-section drafting. Raw tokens are not included in generated prompts or report appendices.
 
 ## Roadmap
 

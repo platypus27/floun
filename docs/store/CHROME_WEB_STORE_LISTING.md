@@ -10,7 +10,7 @@
 
 ## Short Description
 
-Lightweight crypto-readiness scanner for TLS, certificates, JavaScript crypto patterns, and token hygiene signals.
+Lightweight crypto-readiness scanner with optional DeepSeek V4 Flash report drafting for TLS, certificates, JavaScript crypto patterns, and token hygiene signals.
 
 ## Detailed Description
 
@@ -26,6 +26,7 @@ Core capabilities:
 - TLS and certificate metadata checks through explicit API host permissions.
 - Explainable findings with severity, confidence, rationale, limitations, recommendations, rule IDs, and references.
 - Redacted PDF report generation.
+- Optional DeepSeek V4 Flash-drafted report sections through a user-supplied API key (off by default; no AI calls are made without `VITE_DEEPSEEK_API_KEY`).
 
 Scope boundaries:
 
@@ -46,7 +47,7 @@ Suggested review flow:
 4. Generate a PDF report and confirm raw token values are not exposed.
 5. Optional local fixture: serve `floun/fixtures/` with `npm run fixture:server` and scan `http://127.0.0.1:4174/crypto-readiness.html`.
 
-The store package is built without `REACT_APP_GEMINI_API_KEY`. Optional Gemini report drafting is a local development configuration only unless a future release adds explicit privacy and review coverage for it.
+The store package is built without `VITE_DEEPSEEK_API_KEY`. Optional DeepSeek report drafting is a local development configuration only unless a future release adds explicit privacy and review coverage for it.
 
 ## Required Store Assets
 

@@ -33,12 +33,12 @@ npm run fixture:server
 
 Then scan `http://127.0.0.1:4174/crypto-readiness.html`.
 
-## Optional Gemini Report Text
+## Optional DeepSeek Report Text
 
-PDF reports work without an AI key by using a local fallback summary. To enable Gemini-generated report sections, copy `.env.example` to `.env.local` and set:
+PDF reports work without an AI key by using a local fallback summary. To enable DeepSeek-drafted report sections, copy `.env.example` to `.env.local` and set:
 
 ```bash
-REACT_APP_GEMINI_API_KEY=your-key-here
+VITE_DEEPSEEK_API_KEY=your-deepseek-key-here
 ```
 
 Do not commit `.env.local` or API key files.

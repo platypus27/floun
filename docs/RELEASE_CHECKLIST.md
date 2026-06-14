@@ -44,8 +44,8 @@ npm run qa:chrome:flows
 8. Confirm the HTTP fixture reports a certificate adapter warning rather than reintroducing `file://` support or broad host permissions.
 9. Scan a known HTTPS site and confirm TLS and certificate adapters report `complete`, `partial`, or `unavailable` states clearly.
 10. Attempt unsupported extension/browser pages such as `chrome://extensions/` and confirm the popup shows a graceful error.
-11. Generate a PDF report without `REACT_APP_GEMINI_API_KEY` configured and confirm raw tokens are absent.
-12. If Gemini drafting is configured locally, confirm generated report text does not contain raw tokens, code snippets, hashes, or certificate bodies.
+11. Generate a PDF report without `VITE_DEEPSEEK_API_KEY` configured and confirm raw tokens are absent.
+12. If DeepSeek drafting is configured locally, confirm generated report text does not contain raw tokens, code snippets, hashes, or certificate bodies.
 13. Record the QA result in `docs/release/2.0.0/QA_EVIDENCE.md`.
 
 ## Chrome Web Store Prep
