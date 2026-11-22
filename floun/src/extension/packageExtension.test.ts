@@ -123,7 +123,7 @@ test("the packaged extension includes its open-source license and notice", async
       "Floun Copyright 2026 Kryv Labs",
     );
     expect(strFromU8(archive["THIRD_PARTY_NOTICES.txt"])).toContain(
-      "@kryv/teal@0.3.1",
+      "@kryv/teal@1.2.0",
     );
   } finally {
     rmSync(tempDir, { recursive: true, force: true });

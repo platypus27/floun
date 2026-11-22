@@ -25,7 +25,7 @@ test("the v3 store contract matches the Teal UI and shipped BYOK behavior", () =
   expect(combined).not.toContain("VITE_DEEPSEEK_API_KEY");
   expect(combined).not.toContain("ssl-checker.io");
   expect(packageJson.version).toBe("3.0.0");
-  expect(packageJson.dependencies["@kryv/teal"]).toBe("0.3.1");
+  expect(packageJson.dependencies["@kryv/teal"]).toBe("1.2.0");
   expect(manifest.version).toBe("3.0.0");
   expect(listing).toMatch(/user-supplied DeepSeek API key/i);
   expect(listing).toMatch(/explicit consent/i);
