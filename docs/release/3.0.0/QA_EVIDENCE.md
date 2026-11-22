@@ -7,21 +7,21 @@ Status: release candidate verified locally on Linux on 2026-07-20. The candidate
 - Package path: `floun/release/floun-3.0.0.zip`
 - Alias package path: `floun/release/floun-3.0.zip`
 - Extension version: `3.0.0`
-- SHA-256: `54a2fe2fa23c5d0f4a14634bbeffb8d411ef8b37d48af701566a65ba8918094a`
-- Alias SHA-256: `54a2fe2fa23c5d0f4a14634bbeffb8d411ef8b37d48af701566a65ba8918094a`
-- Size bytes: `419811`
-- Two independent deterministic packaging runs produced matching SHA-256: `54a2fe2fa23c5d0f4a14634bbeffb8d411ef8b37d48af701566a65ba8918094a`
+- SHA-256: `79460802aa78d217ffcd76ef3772a9259394c9690f443b721e4a908245fc2e84`
+- Alias SHA-256: `79460802aa78d217ffcd76ef3772a9259394c9690f443b721e4a908245fc2e84`
+- Size bytes: `396127`
+- Two independent deterministic packaging runs produced matching SHA-256: `79460802aa78d217ffcd76ef3772a9259394c9690f443b721e4a908245fc2e84`
 
 Required archive entries:
 
 - `LICENSE.txt`
 - `NOTICE.txt`
 - `THIRD_PARTY_NOTICES.txt`
-- `assets/ai-handler-CywFBx22.js`
-- `assets/index-CZUzaN4x.js`
-- `assets/index-DqUw9XTJ.css`
-- `assets/pdfService-gadytbjr.js`
-- `assets/reportDraftingSettings-BKincOJB.js`
+- `assets/ai-handler-CTicAyFX.js`
+- `assets/index-CiwG98Xk.js`
+- `assets/index-qOSo6Iw7.css`
+- `assets/pdfService-BDiMdWM7.js`
+- `assets/reportDraftingSettings-CXA6zaou.js`
 - `background.js`
 - `icons/favicon.ico`
 - `icons/floun.png`
@@ -38,7 +38,7 @@ The artifact gate verifies the Apache-2.0 license, Kryv Labs notice, generated p
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Teal dependency install | Pass | Installed published `@kryv/teal@0.3.0`; the production dependency audit reported zero vulnerabilities. |
+| Teal dependency install | Pass | Installed published `@kryv/teal@0.3.1`; the production dependency audit reported zero vulnerabilities. |
 | `npm run release:check` | Pass | 34 test files and 138 tests passed; lint, production build, production dependency audit, typecheck, and worker syntax check passed. |
 | `npm run release:artifact` | Pass | Canonical and alias archives matched the recorded version, entries, size, and SHA-256. |
 | `npm run release:determinism` | Pass | Two clean package runs were byte-identical. |

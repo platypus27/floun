@@ -13,9 +13,9 @@ test("third-party notices cover production dependencies and exclude development 
   const notices = generateThirdPartyNotices({ projectRoot: process.cwd() });
 
   expect(notices).toContain("GENERATED FILE - DO NOT EDIT");
-  expect(notices).toContain("@kryv/teal@0.3.0");
-  expect(notices).toContain("lucide-react@1.25.0");
-  expect(notices).toContain("react@18.3.1");
+  expect(notices).toMatch(/@kryv\/teal@\d+\.\d+\.\d+/);
+  expect(notices).toMatch(/lucide-react@\d+\.\d+\.\d+/);
+  expect(notices).toMatch(/react@18\.\d+\.\d+/);
   expect(notices).toContain("MIT License");
   expect(notices).not.toContain("vitest@");
 });

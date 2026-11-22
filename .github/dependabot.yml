@@ -7,12 +7,40 @@ updates:
       day: monday
       time: "03:00"
       timezone: Asia/Singapore
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    # Version and security updates cannot share a group, so each dependency
+    # type gets one rule set per update kind. Without the security groups every
+    # advisory-driven bump (often a transitive package) opens its own PR.
     groups:
-      development-dependencies:
-        dependency-type: development
       production-dependencies:
+        applies-to: version-updates
         dependency-type: production
+      development-dependencies:
+        applies-to: version-updates
+        dependency-type: development
+      production-security:
+        applies-to: security-updates
+        dependency-type: production
+      development-security:
+        applies-to: security-updates
+        dependency-type: development
+    # These majors are migrated deliberately, not through a grouped PR.
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -21,4 +49,18 @@ updates:
       day: monday
       time: "03:30"
       timezone: Asia/Singapore
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    cooldown:
+      default-days: 7
+    # Actions have no dev/prod split; batch every pin bump into one PR.
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      github-actions-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
