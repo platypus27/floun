@@ -56,19 +56,50 @@ test("buildPromptFindingsText uses report-owned evidence policy", () => {
   expect(findingsText).not.toContain("secret-token-value");
 });
 
-test("buildReportContent omits raw evidence from appendices", () => {
+test("buildReportContent keeps only non-duplicated detail in appendices", () => {
   const sections = fallbackSections(buildPromptFindingsText(groups), 1, 1);
   const content = buildReportContent(groups, sections, groupLabels);
 
-  expect(content.appendix).toContain("Tokens Results");
-  expect(content.appendix).toContain("TLS Results");
-  expect(content.appendix).not.toContain("Headers Results");
-  expect(content.appendix).toContain("Rationale: Classical TLS suites are migration inventory signals.");
-  expect(content.appendix).toContain("Limitations: TLS API responses may omit negotiated group details.");
-  expect(content.appendix).toContain("Recommendation: Review negotiated TLS behavior manually.");
-  expect(content.appendix).toContain("References: https://www.cisa.gov/resources-tools/resources/quantum-readiness-migration-post-quantum-cryptography");
-  expect(content.appendix).toContain(`Evidence: ${omittedEvidenceNotice}`);
-  expect(content.appendix).not.toContain("secret-token-value");
+  const headings = content.appendix.map(group => group.heading);
+  expect(headings).toContain("Tokens Results:");
+  expect(headings).toContain("TLS Results:");
+  expect(headings).not.toContain("JavaScript Results:");
+  expect(headings).not.toContain("Certificates Results:");
+  expect(headings).not.toContain("Headers Results:");
+
+  const tokensEntry = content.appendix.find(group => group.heading === "Tokens Results:")?.entries[0];
+  expect(tokensEntry?.title).toBe("Session token may be weak");
+  expect(tokensEntry?.extras).toContainEqual({ label: "Rule ID", value: "token-test" });
+  expect(tokensEntry?.extras).toContainEqual({ label: "Details", value: "Failed checks: Short Token." });
+
+  const tlsEntry = content.appendix.find(group => group.heading === "TLS Results:")?.entries[0];
+  expect(tlsEntry?.title).toBe("TLS cipher needs migration review");
+  expect(tlsEntry?.extras).toContainEqual({
+    label: "References",
+    value: "https://www.cisa.gov/resources-tools/resources/quantum-readiness-migration-post-quantum-cryptography",
+  });
+  expect(tlsEntry?.extras).toContainEqual({ label: "Updated", value: "2026-06-05" });
+
+  const appendixText = JSON.stringify(content.appendix);
+  expect(appendixText).not.toContain("Rationale:");
+  expect(appendixText).not.toContain("Limitations:");
+  expect(appendixText).not.toContain("Recommendation:");
+  expect(appendixText).not.toContain("Standard status:");
+  expect(appendixText).not.toContain("Confidence:");
+  expect(appendixText).not.toContain("Evidence:");
+  expect(appendixText).not.toContain("secret-token-value");
+
+  expect(content.statusCounts).toEqual({ vulnerable: 1, review: 1, safe: 0, informational: 0 });
+  expect(content.findingDisplays.length).toBe(2);
+  expect(content.findingDisplays[1].fields).toContainEqual({
+    label: "Rationale",
+    value: "Classical TLS suites are migration inventory signals.",
+  });
+  expect(content.findingDisplays[0].fields).toContainEqual({
+    label: "Evidence",
+    value: omittedEvidenceNotice,
+  });
+
   expect(content.reviewMethodsCount).toBe(1);
   expect(content.reviewMethodsBreakdown).toBe("JS: 0, Tokens: 0, TLS: 1, Certificates: 0");
   expect(content.vulnerableMethodsCount).toBe(1);

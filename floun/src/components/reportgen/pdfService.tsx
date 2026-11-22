@@ -10,8 +10,11 @@ import {
   pageSize,
   sectionDefinitions,
   wrapLineToWidth,
+  type LineColor,
   type PdfFontSet,
+  type RectFill,
   type ReportLayout,
+  type SectionPlan,
 } from "./pdfLayout";
 
 interface CoverDetails {
@@ -30,13 +33,27 @@ interface ChromeRuntimeAssetApi {
 
 const defaultReportLogoAssetPath = "icons/icon_128.png";
 
-const reportColors: Record<string, RGB> = {
+const reportColors: Record<LineColor, RGB> = {
   primary: rgb(15 / 255, 106 / 255, 108 / 255),
   body: rgb(34 / 255, 66 / 255, 58 / 255),
   muted: rgb(76 / 255, 106 / 255, 96 / 255),
+  white: rgb(1, 1, 1),
+  severityVulnerable: rgb(179 / 255, 55 / 255, 43 / 255),
+  severityReview: rgb(180 / 255, 83 / 255, 9 / 255),
+  severitySafe: rgb(21 / 255, 128 / 255, 61 / 255),
+  severityInfo: rgb(76 / 255, 106 / 255, 96 / 255),
 };
 
-const ruleColor = rgb(238 / 255, 226 / 255, 200 / 255);
+const rectFills: Record<RectFill, RGB> = {
+  zebra: rgb(247 / 255, 240 / 255, 222 / 255),
+  rule: rgb(238 / 255, 226 / 255, 200 / 255),
+  pillVulnerable: reportColors.severityVulnerable,
+  pillReview: reportColors.severityReview,
+  pillSafe: reportColors.severitySafe,
+  pillInfo: reportColors.severityInfo,
+};
+
+const ruleColor = rectFills.rule;
 const footerFontSize = 9;
 const footerRuleY = marginBottom - 18;
 
@@ -50,11 +67,8 @@ export async function generatePDFReport(
     bold: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
   };
 
-  const sectionTexts = sectionDefinitions.map(([heading, key]) => [
-    heading,
-    String(content[key as keyof ReportContent]),
-  ] as [string, string]);
-  const layout = layoutReport(fonts, sectionTexts);
+  const plan = buildSectionPlan(content);
+  const layout = layoutReport(fonts, plan);
 
   const contentPages: PDFPage[] = [];
   for (let pageIndex = 0; pageIndex < layout.pageCount; pageIndex += 1) {
@@ -76,7 +90,58 @@ export async function generatePDFReport(
   saveAs(blob, "Quantum_Safe_Cryptography_Report.pdf");
 }
 
+export function buildSectionPlan(content: ReportContent): SectionPlan[] {
+  const plan: SectionPlan[] = [];
+
+  sectionDefinitions.forEach(([heading, key]) => {
+    if (key === "vulnerabilityAnalysis") {
+      plan.push({
+        heading,
+        type: "analysis",
+        intro: String(content.vulnerabilityAnalysis),
+        counts: content.statusCounts,
+        findings: content.findingDisplays.map(display => ({
+          title: display.title,
+          severity: display.severity,
+          location: display.location,
+          confidence: display.confidence,
+          fields: display.fields,
+        })),
+      });
+      return;
+    }
+
+    plan.push({ heading, type: "prose", text: String(content[key as keyof ReportContent]) });
+  });
+
+  if (content.appendix.length) {
+    plan.push({
+      heading: "8. Appendices",
+      type: "appendix",
+      groups: content.appendix.map(group => ({
+        heading: group.heading,
+        entries: group.entries.map(entry => ({
+          title: entry.title,
+          extras: entry.extras,
+        })),
+      })),
+    });
+  }
+
+  return plan;
+}
+
 function drawLayout(pages: PDFPage[], layout: ReportLayout, fonts: PdfFontSet): void {
+  layout.rects.forEach(rect => {
+    pages[rect.pageIndex].drawRectangle({
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+      color: rectFills[rect.fill],
+    });
+  });
+
   layout.lines.forEach(line => {
     pages[line.pageIndex].drawText(line.text, {
       x: line.x,
@@ -171,13 +236,13 @@ async function drawCoverPage(
     gapAfter: 12,
   });
 
-  sectionDefinitions.forEach(([heading], index) => {
-    const pageNumber = layout.sections[index].startPageIndex + 2;
+  layout.sections.forEach(section => {
+    const pageNumber = section.startPageIndex + 2;
     const numberLabel = String(pageNumber);
-    const labelWidth = fonts.regular.widthOfTextAtSize(heading, 11);
+    const labelWidth = fonts.regular.widthOfTextAtSize(section.heading, 11);
     const numberWidth = fonts.regular.widthOfTextAtSize(numberLabel, 11);
 
-    page.drawText(heading, {
+    page.drawText(section.heading, {
       x: marginX,
       y: cursorY,
       size: 11,

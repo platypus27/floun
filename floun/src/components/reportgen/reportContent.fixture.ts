@@ -55,6 +55,12 @@ export const smallFindingGroups: FindingGroups = {
   Certificates: [],
 };
 
+export const zeroFindingGroups: FindingGroups = {};
+
+export const singleFindingGroups: FindingGroups = {
+  JavaScript: [vulnerableFinding],
+};
+
 function makeLargeFinding(index: number): AnalysisFinding {
   return {
     ruleId: `crypto-weakness-rule-${index}-with-a-rather-long-identifier`,
@@ -65,6 +71,7 @@ function makeLargeFinding(index: number): AnalysisFinding {
     location: `https://example.com/assets/module-${index}/bundle.min.js?cachebust=${fixtureLongHash.slice(0, 24)}`,
     standardStatus: "deprecated",
     rationale: `Rationale text for finding ${index}. `.repeat(4),
+    details: `Raw scanner detail for finding ${index}. `.repeat(3),
     limitations: `Limitations text for finding ${index}. `.repeat(3),
     recommendation: `Recommendation text for finding ${index}. `.repeat(3),
     references: [fixtureLongReferenceUrl, "https://csrc.nist.gov/publications"],
