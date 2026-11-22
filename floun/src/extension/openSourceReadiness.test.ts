@@ -1,13 +1,71 @@
 declare const process: { cwd: () => string };
 declare function require(moduleName: string): any;
 
-const { existsSync, readFileSync } = require("fs");
+const { existsSync, readdirSync, readFileSync } = require("fs");
 const { join } = require("path");
 
 const projectRoot = process.cwd();
 const repoRoot = join(projectRoot, "..");
 const repoFile = (path: string) => join(repoRoot, path);
 const readRepoFile = (path: string) => readFileSync(repoFile(path), "utf8");
+
+const PINNED_USES = /^[\w.-]+\/[\w./-]+@[0-9a-f]{40} # v\d+(\.\d+){0,2}\s*$/;
+
+/** Returns every `uses:` line that is not pinned to a 40-hex SHA with a `# vX.Y.Z` comment. */
+const findUnpinnedActions = (workflow: string): string[] =>
+  workflow
+    .split("\n")
+    .map((line) => /^\s*(?:-\s+)?uses:\s*(.+)$/.exec(line)?.[1]?.trim())
+    .filter(
+      (ref): ref is string => ref !== undefined && !PINNED_USES.test(ref),
+    );
+
+const SHA = "0123456789abcdef0123456789abcdef01234567";
+
+test("workflow action pinning check flags unpinned or uncommented uses", () => {
+  expect(
+    findUnpinnedActions(`      - uses: actions/checkout@${SHA} # v7.0.1`),
+  ).toEqual([]);
+  expect(
+    findUnpinnedActions(
+      `      - uses: github/codeql-action/init@${SHA} # v9.9.9`,
+    ),
+  ).toEqual([]);
+  expect(findUnpinnedActions("      - uses: actions/checkout@v4")).toHaveLength(
+    1,
+  );
+  expect(
+    findUnpinnedActions(`      - uses: actions/checkout@${SHA}`),
+  ).toHaveLength(1);
+  expect(
+    findUnpinnedActions("      - uses: actions/checkout@0123abc # v4.0.0"),
+  ).toHaveLength(1);
+});
+
+test("every workflow action is pinned to a full commit SHA with a version comment", () => {
+  const dir = repoFile(".github/workflows");
+  const files = readdirSync(dir).filter((f: string) => /\.ya?ml$/.test(f));
+  expect(files.length).toBeGreaterThan(0);
+  const used = new Set<string>();
+  for (const file of files) {
+    const text = readFileSync(join(dir, file), "utf8");
+    expect({ file, unpinned: findUnpinnedActions(text) }).toEqual({
+      file,
+      unpinned: [],
+    });
+    for (const m of text.matchAll(/uses:\s*([^@\s]+)@/g)) used.add(m[1]);
+  }
+  for (const action of [
+    "actions/checkout",
+    "actions/setup-node",
+    "actions/dependency-review-action",
+    "gitleaks/gitleaks-action",
+    "github/codeql-action/init",
+    "github/codeql-action/analyze",
+  ]) {
+    expect(used).toContain(action);
+  }
+});
 
 test("the repository exposes a complete open-source contributor contract", () => {
   const license = readRepoFile("LICENSE");
@@ -62,12 +120,8 @@ test("GitHub contribution and supply-chain automation is present", () => {
   expect(readRepoFile(".github/dependabot.yml")).toContain("github-actions");
   const codeqlWorkflow = readRepoFile(".github/workflows/codeql.yml");
   expect(codeqlWorkflow).toContain("security-events: write");
-  expect(codeqlWorkflow).toContain(
-    "github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3",
-  );
-  expect(codeqlWorkflow).toContain(
-    "github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3",
-  );
+  expect(codeqlWorkflow).toMatch(/uses: github\/codeql-action\/init@/);
+  expect(codeqlWorkflow).toMatch(/uses: github\/codeql-action\/analyze@/);
   expect(readRepoFile(".github/workflows/dependency-review.yml")).toContain(
     "dependency-review-action",
   );
