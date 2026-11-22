@@ -1,7 +1,9 @@
 :root {
+  --app-glow-a: color-mix(in srgb, var(--teal-color-primary) 14%, transparent);
+  --app-glow-b: color-mix(in srgb, var(--teal-color-secondary) 12%, transparent);
   font-family: var(--teal-font-body);
-  color: rgb(var(--color-on-background));
-  background: rgb(var(--color-background));
+  color: var(--teal-color-on-background);
+  background: var(--teal-color-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -24,7 +26,7 @@ body {
   background:
     radial-gradient(circle at 10% -10%, var(--app-glow-a), transparent 36%),
     radial-gradient(circle at 100% 16%, var(--app-glow-b), transparent 30%),
-    rgb(var(--color-background));
+    var(--teal-color-background);
 }
 
 button,
@@ -51,7 +53,7 @@ button {
   min-height: 84px;
   padding: 16px 18px;
   border-bottom: 1px solid var(--teal-border-subtle);
-  background: rgb(var(--color-surface) / 0.9);
+  background: color-mix(in srgb, var(--teal-color-surface) 90%, transparent);
   backdrop-filter: blur(16px);
 }
 
@@ -68,7 +70,7 @@ button {
 .brand-title-row h1 {
   margin: 0;
   font-family: var(--teal-font-headline);
-  color: rgb(var(--color-primary));
+  color: var(--teal-color-primary);
   font-size: 1.75rem;
   font-weight: 800;
   line-height: 1.1;
@@ -77,7 +79,7 @@ button {
 
 .brand-copy p {
   margin: 3px 0 0;
-  color: rgb(var(--color-on-surface-variant));
+  color: var(--teal-color-on-surface-variant);
   font-size: 0.72rem;
 }
 
@@ -91,7 +93,7 @@ button {
   padding: 18px;
   overflow: hidden;
   background:
-    linear-gradient(135deg, rgb(var(--color-surface)), rgb(var(--color-primary-container) / 0.7));
+    linear-gradient(135deg, var(--teal-color-surface), color-mix(in srgb, var(--teal-color-primary-container) 70%, transparent));
 }
 
 .scan-card > div:first-child {
@@ -102,7 +104,7 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: rgb(var(--color-on-surface-variant));
+  color: var(--teal-color-on-surface-variant);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -119,8 +121,8 @@ button {
   height: 38px;
   place-items: center;
   border-radius: var(--teal-radius-control);
-  color: rgb(var(--color-primary));
-  background: rgb(var(--color-primary) / 0.1);
+  color: var(--teal-color-primary);
+  background: color-mix(in srgb, var(--teal-color-primary) 10%, transparent);
 }
 
 .scan-symbol svg,
@@ -141,7 +143,7 @@ button {
 .ready-state {
   min-height: 210px;
   padding: 28px 22px;
-  background: rgb(var(--color-surface-container) / 0.8);
+  background: color-mix(in srgb, var(--teal-color-surface-container) 80%, transparent);
 }
 
 .scanning-state {
@@ -167,7 +169,7 @@ button {
   height: 118px;
   place-items: center;
   border-radius: 50%;
-  background: rgb(var(--color-primary) / 0.06);
+  background: color-mix(in srgb, var(--teal-color-primary) 6%, transparent);
   isolation: isolate;
 }
 
@@ -187,7 +189,7 @@ button {
 }
 
 .scanner-ring {
-  border: 1px solid rgb(var(--color-primary) / 0.25);
+  border: 1px solid color-mix(in srgb, var(--teal-color-primary) 25%, transparent);
   animation: scanner-pulse 1.8s ease-out infinite;
 }
 
@@ -196,7 +198,7 @@ button {
 }
 
 .scanner-sweep {
-  background: conic-gradient(from 0deg, transparent 0 72%, rgb(var(--color-primary) / 0.28) 94%, transparent 100%);
+  background: conic-gradient(from 0deg, transparent 0 72%, color-mix(in srgb, var(--teal-color-primary) 28%, transparent) 94%, transparent 100%);
   animation: scanner-turn 1.4s linear infinite;
 }
 
@@ -227,7 +229,7 @@ button {
 
 .saved-key-card {
   padding: 16px;
-  background: rgb(var(--color-surface-container));
+  background: var(--teal-color-surface-container);
 }
 
 .saved-key-card > div:first-child {
@@ -305,16 +307,16 @@ button {
   padding: 9px 5px;
   border-radius: 12px;
   text-align: center;
-  background: rgb(var(--color-surface-container-high));
+  background: var(--teal-color-surface-container-high);
 }
 
 .metric-grid span {
-  color: rgb(var(--color-on-surface-variant));
+  color: var(--teal-color-on-surface-variant);
   font-size: 0.64rem;
 }
 
 .metric-grid strong {
-  color: rgb(var(--color-on-surface));
+  color: var(--teal-color-on-surface);
   font-family: var(--teal-font-headline);
   font-size: 1rem;
 }
@@ -335,19 +337,19 @@ button {
 
 .finding-title {
   overflow-wrap: anywhere;
-  color: rgb(var(--color-on-surface));
+  color: var(--teal-color-on-surface);
   font-weight: 700;
 }
 
 .finding-meta {
   grid-column: 1 / -1;
   overflow-wrap: anywhere;
-  color: rgb(var(--color-on-surface-variant));
+  color: var(--teal-color-on-surface-variant);
   font-size: 0.72rem;
 }
 
 .finding-detail {
-  color: rgb(var(--color-on-surface-variant));
+  color: var(--teal-color-on-surface-variant);
   overflow-wrap: anywhere;
 }
 
@@ -382,7 +384,7 @@ body::-webkit-scrollbar {
 
 body::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgb(var(--color-primary) / 0.55);
+  background: color-mix(in srgb, var(--teal-color-primary) 55%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
