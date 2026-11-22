@@ -7,20 +7,20 @@ Status: release candidate verified locally on Linux on 2026-07-20. The candidate
 - Package path: `floun/release/floun-3.0.0.zip`
 - Alias package path: `floun/release/floun-3.0.zip`
 - Extension version: `3.0.0`
-- SHA-256: `905afc3b850cb733966c4dd7f1b21b6fcd824376f9d637b549c23202d2f052f1`
-- Alias SHA-256: `905afc3b850cb733966c4dd7f1b21b6fcd824376f9d637b549c23202d2f052f1`
-- Size bytes: `377049`
-- Two independent deterministic packaging runs produced matching SHA-256: `905afc3b850cb733966c4dd7f1b21b6fcd824376f9d637b549c23202d2f052f1`
+- SHA-256: `b7ecc66842c7917be17053e3a39ffd8d1ccc353221f5fccdc62147e9892d8e0c`
+- Alias SHA-256: `b7ecc66842c7917be17053e3a39ffd8d1ccc353221f5fccdc62147e9892d8e0c`
+- Size bytes: `377488`
+- Two independent deterministic packaging runs produced matching SHA-256: `b7ecc66842c7917be17053e3a39ffd8d1ccc353221f5fccdc62147e9892d8e0c`
 
 Required archive entries:
 
 - `LICENSE.txt`
 - `NOTICE.txt`
 - `THIRD_PARTY_NOTICES.txt`
-- `assets/ai-handler-B-R3PS2R.js`
-- `assets/index-Dgxt909J.js`
-- `assets/index-DfmtwL91.css`
-- `assets/pdfService-Bd5z2K6L.js`
+- `assets/ai-handler-Ca3bMDfZ.js`
+- `assets/index-CVqDfWR5.js`
+- `assets/index-VW9Q_lNK.css`
+- `assets/pdfService-DU9_WLnT.js`
 - `assets/reportDraftingSettings-CXA6zaou.js`
 - `background.js`
 - `icons/favicon.ico`
