@@ -42,8 +42,12 @@ export function reportSectionPrompts(findingsText: string): Record<keyof ReportS
 
 export function sanitizeReportText(text: string): string {
   return text
-    .replace(/[^\u0020-\u007E]/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[^\u0020-\u007E\n]/g, " ")
+    .split("\n")
+    .map(line => line.replace(/[ \t]+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -63,7 +67,9 @@ export function countFindingsBySeverity(
 }
 
 export function buildPromptFindingsText(groups: FindingGroups): string {
-  return promptFindingSerializer.serializeFindings(flattenFindingGroups(groups));
+  return flattenFindingGroups(groups)
+    .map(finding => promptFindingSerializer.serializeFinding(finding))
+    .join("\n\n");
 }
 
 export function fallbackSections(
@@ -129,6 +135,12 @@ function buildSeverityBreakdown(
 
 function buildAppendix(groups: FindingGroups): string {
   return Object.entries(groups)
-    .map(([group, findings]) => `${group} Results:\n${pdfFindingSerializer.serializeFindings(findings)}`)
+    .map(([group, findings]) => {
+      const serialized = findings.length
+        ? findings.map(finding => pdfFindingSerializer.serializeFinding(finding)).join("\n\n")
+        : pdfFindingSerializer.serializeFindings(findings);
+
+      return `${group} Results:\n${serialized}`;
+    })
     .join("\n\n");
 }
