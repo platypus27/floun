@@ -111,19 +111,20 @@ test("rejects tab query runtime errors with the Chrome error message", async () 
 });
 
 test("rejects background runtime errors with the Chrome error message", async () => {
+  const runtime: { lastError?: { message: string }; sendMessage: unknown } = {
+    lastError: undefined,
+    sendMessage: vi.fn((_message, callback) => {
+      runtime.lastError = { message: "Background worker is unavailable." };
+      callback(undefined);
+    }),
+  };
   vi.stubGlobal("chrome", {
     tabs: {
       query: vi.fn((_query, callback) => {
         callback([{ id: 7, url: "https://example.com/path?query=1" }]);
       }),
     },
-    runtime: {
-      lastError: undefined as chrome.runtime.LastError | undefined,
-      sendMessage: vi.fn((_message, callback) => {
-        chrome.runtime.lastError = { message: "Background worker is unavailable." };
-        callback(undefined);
-      }),
-    },
+    runtime,
   });
 
   await expect(scanActiveTab()).rejects.toThrow("Background worker is unavailable.");
