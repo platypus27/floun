@@ -465,6 +465,14 @@ async function capturePopupScreenshot(popupTarget, outputPath) {
 
   try {
     await client.send("Page.enable");
+    // Optional: FLOUN_COLOR_SCHEME=light|dark pins prefers-color-scheme so artwork does not depend on the OS theme.
+    if (["light", "dark"].includes(process.env.FLOUN_COLOR_SCHEME)) {
+      await client.send("Emulation.setEmulatedMedia", {
+        features: [{ name: "prefers-color-scheme", value: process.env.FLOUN_COLOR_SCHEME }],
+      });
+      // Let color transitions finish so the capture is not mid-animation.
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, 1_000));
+    }
     const metrics = await client.send("Page.getLayoutMetrics");
     const viewport = metrics.cssVisualViewport || metrics.visualViewport;
     const screenshot = await client.send("Page.captureScreenshot", {
