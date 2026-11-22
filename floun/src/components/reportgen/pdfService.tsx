@@ -1,6 +1,21 @@
-import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, PDFPage, RGB, StandardFonts, rgb } from "pdf-lib";
 import { saveAs } from "file-saver";
 import type { ReportContent } from "./reportDocument";
+import {
+  contentWidth,
+  layoutReport,
+  marginBottom,
+  marginX,
+  marginTop,
+  pageSize,
+  sectionDefinitions,
+  wrapLineToWidth,
+  type LineColor,
+  type PdfFontSet,
+  type RectFill,
+  type ReportLayout,
+  type SectionPlan,
+} from "./pdfLayout";
 
 interface CoverDetails {
   title: string;
@@ -10,49 +25,61 @@ interface CoverDetails {
   confidentialityNotice?: string;
 }
 
-interface PdfFonts {
-  regular: PDFFont;
-  bold: PDFFont;
-}
-
 interface ChromeRuntimeAssetApi {
   runtime?: {
     getURL?: (assetPath: string) => string;
   };
 }
 
-const pageSize: [number, number] = [600, 800];
-const margin = 50;
-const bodyFontSize = 12;
-const defaultReportLogoAssetPath = "icons/icon_128.png";
+const defaultReportLogoAssetPath = "icons/floun.png";
 
-const sectionDefinitions: Array<[string, keyof ReportContent]> = [
-  ["1. Introduction", "introduction"],
-  ["2. Executive Summary", "executiveSummary"],
-  ["3. Readiness Analysis", "vulnerabilityAnalysis"],
-  ["4. Risk Assessment", "riskAssessment"],
-  ["5. Recommendations", "recommendations"],
-  ["6. Next Steps", "nextStep"],
-  ["7. Conclusion", "conclusion"],
-  ["8. Appendices", "appendix"],
-];
+const reportColors: Record<LineColor, RGB> = {
+  primary: rgb(15 / 255, 106 / 255, 108 / 255),
+  body: rgb(34 / 255, 66 / 255, 58 / 255),
+  muted: rgb(76 / 255, 106 / 255, 96 / 255),
+  white: rgb(1, 1, 1),
+  severityVulnerable: rgb(179 / 255, 55 / 255, 43 / 255),
+  severityReview: rgb(180 / 255, 83 / 255, 9 / 255),
+  severitySafe: rgb(21 / 255, 128 / 255, 61 / 255),
+  severityInfo: rgb(76 / 255, 106 / 255, 96 / 255),
+};
+
+const rectFills: Record<RectFill, RGB> = {
+  zebra: rgb(247 / 255, 240 / 255, 222 / 255),
+  rule: rgb(238 / 255, 226 / 255, 200 / 255),
+  pillVulnerable: reportColors.severityVulnerable,
+  pillReview: reportColors.severityReview,
+  pillSafe: reportColors.severitySafe,
+  pillInfo: reportColors.severityInfo,
+};
+
+const ruleColor = rectFills.rule;
+const footerFontSize = 9;
+const footerRuleY = marginBottom - 18;
 
 export async function generatePDFReport(
   coverDetails: CoverDetails,
   content: ReportContent
 ): Promise<void> {
   const pdfDoc = await PDFDocument.create();
-  const fonts = {
+  const fonts: PdfFontSet = {
     regular: await pdfDoc.embedFont(StandardFonts.Helvetica),
     bold: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
   };
 
-  const coverPage = pdfDoc.addPage(pageSize);
-  await drawCoverPage(pdfDoc, coverPage, coverDetails, fonts);
+  const plan = buildSectionPlan(content);
+  const layout = layoutReport(fonts, plan);
 
-  sectionDefinitions.forEach(([heading, key]) => {
-    addSection(pdfDoc, heading, String(content[key]), fonts);
-  });
+  const contentPages: PDFPage[] = [];
+  for (let pageIndex = 0; pageIndex < layout.pageCount; pageIndex += 1) {
+    contentPages.push(pdfDoc.addPage(pageSize));
+  }
+  drawLayout(contentPages, layout, fonts);
+
+  const coverPage = pdfDoc.insertPage(0, pageSize);
+  await drawCoverPage(pdfDoc, coverPage, coverDetails, layout, fonts);
+
+  stampFooters(pdfDoc, fonts);
 
   const pdfBytes = await pdfDoc.save();
   const pdfBlobPart = pdfBytes.buffer.slice(
@@ -63,72 +90,253 @@ export async function generatePDFReport(
   saveAs(blob, "Quantum_Safe_Cryptography_Report.pdf");
 }
 
+export function buildSectionPlan(content: ReportContent): SectionPlan[] {
+  const plan: SectionPlan[] = [];
+
+  sectionDefinitions.forEach(([heading, key]) => {
+    if (key === "vulnerabilityAnalysis") {
+      plan.push({
+        heading,
+        type: "analysis",
+        intro: String(content.vulnerabilityAnalysis),
+        counts: content.statusCounts,
+        findings: content.findingDisplays.map(display => ({
+          title: display.title,
+          severity: display.severity,
+          location: display.location,
+          confidence: display.confidence,
+          fields: display.fields,
+        })),
+      });
+      return;
+    }
+
+    plan.push({ heading, type: "prose", text: String(content[key as keyof ReportContent]) });
+  });
+
+  if (content.appendix.length) {
+    plan.push({
+      heading: "8. Appendices",
+      type: "appendix",
+      groups: content.appendix.map(group => ({
+        heading: group.heading,
+        entries: group.entries.map(entry => ({
+          title: entry.title,
+          extras: entry.extras,
+        })),
+      })),
+    });
+  }
+
+  return plan;
+}
+
+function drawLayout(pages: PDFPage[], layout: ReportLayout, fonts: PdfFontSet): void {
+  layout.rects.forEach(rect => {
+    pages[rect.pageIndex].drawRectangle({
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+      color: rectFills[rect.fill],
+    });
+  });
+
+  layout.lines.forEach(line => {
+    pages[line.pageIndex].drawText(line.text, {
+      x: line.x,
+      y: line.y,
+      size: line.size,
+      font: fonts[line.font],
+      color: reportColors[line.color],
+    });
+  });
+}
+
 async function drawCoverPage(
   pdfDoc: PDFDocument,
   page: PDFPage,
   coverDetails: CoverDetails,
-  fonts: PdfFonts
+  layout: ReportLayout,
+  fonts: PdfFontSet
 ): Promise<void> {
+  let cursorY = page.getHeight() - marginTop;
+
   const rawLogoData = coverDetails.logoBase64 || await loadDefaultLogoBase64();
   const logoImage = await embedLogo(pdfDoc, rawLogoData);
 
   if (logoImage) {
-    const logoDims = logoImage.scale(200 / logoImage.width);
+    const logoWidth = 120;
+    const logoDims = logoImage.scale(logoWidth / logoImage.width);
     page.drawImage(logoImage, {
-      x: margin,
-      y: page.getHeight() - logoDims.height - margin,
+      x: marginX,
+      y: cursorY - logoDims.height,
       width: logoDims.width,
       height: logoDims.height,
     });
+    cursorY -= logoDims.height + 32;
+  } else {
+    cursorY -= 8;
   }
 
-  page.drawText(coverDetails.title, {
-    x: margin,
-    y: page.getHeight() - 200,
-    size: 24,
-    font: fonts.bold,
-    color: rgb(0, 0, 0),
+  cursorY = drawCoverText(page, coverDetails.title, {
+    fonts,
+    cursorY,
+    size: 22,
+    font: "bold",
+    color: reportColors.primary,
+    gapAfter: 8,
   });
-  page.drawText(coverDetails.subtitle, {
-    x: margin,
-    y: page.getHeight() - 230,
-    size: 18,
-    font: fonts.regular,
-    color: rgb(0, 0, 0),
+
+  cursorY = drawCoverText(page, coverDetails.subtitle, {
+    fonts,
+    cursorY,
+    size: 13,
+    font: "regular",
+    color: reportColors.body,
+    gapAfter: 20,
   });
-  page.drawText(`Date: ${coverDetails.date}`, {
-    x: margin,
-    y: page.getHeight() - 270,
-    size: bodyFontSize,
-    font: fonts.regular,
-    color: rgb(0, 0, 0),
+
+  page.drawLine({
+    start: { x: marginX, y: cursorY },
+    end: { x: page.getWidth() - marginX, y: cursorY },
+    thickness: 1,
+    color: ruleColor,
+  });
+  cursorY -= 22;
+
+  cursorY = drawCoverText(page, `Date: ${coverDetails.date}`, {
+    fonts,
+    cursorY,
+    size: 11,
+    font: "regular",
+    color: reportColors.body,
+    gapAfter: 6,
   });
 
   if (coverDetails.confidentialityNotice) {
-    page.drawText(coverDetails.confidentialityNotice, {
-      x: margin,
-      y: page.getHeight() - 295,
-      size: bodyFontSize,
-      font: fonts.bold,
-      color: rgb(0, 0, 0),
+    cursorY = drawCoverText(page, coverDetails.confidentialityNotice, {
+      fonts,
+      cursorY,
+      size: 11,
+      font: "bold",
+      color: reportColors.body,
+      gapAfter: 28,
     });
+  } else {
+    cursorY -= 28;
   }
 
-  page.drawText("Table of Contents", {
-    x: margin,
-    y: page.getHeight() - 350,
-    size: 18,
-    font: fonts.bold,
-    color: rgb(0, 0, 0),
+  cursorY = drawCoverText(page, "Table of Contents", {
+    fonts,
+    cursorY,
+    size: 15,
+    font: "bold",
+    color: reportColors.primary,
+    gapAfter: 12,
   });
 
-  sectionDefinitions.forEach(([heading], index) => {
-    page.drawText(heading, {
-      x: margin,
-      y: page.getHeight() - 380 - index * 20,
-      size: bodyFontSize,
+  layout.sections.forEach(section => {
+    const pageNumber = section.startPageIndex + 2;
+    const numberLabel = String(pageNumber);
+    const labelWidth = fonts.regular.widthOfTextAtSize(section.heading, 11);
+    const numberWidth = fonts.regular.widthOfTextAtSize(numberLabel, 11);
+
+    page.drawText(section.heading, {
+      x: marginX,
+      y: cursorY,
+      size: 11,
       font: fonts.regular,
-      color: rgb(0, 0, 0),
+      color: reportColors.body,
+    });
+    page.drawText(numberLabel, {
+      x: page.getWidth() - marginX - numberWidth,
+      y: cursorY,
+      size: 11,
+      font: fonts.regular,
+      color: reportColors.body,
+    });
+
+    let dotsX = marginX + labelWidth + 8;
+    const dotsEndX = page.getWidth() - marginX - numberWidth - 8;
+    const dotAdvance = fonts.regular.widthOfTextAtSize(".", 11) * 2;
+
+    while (dotsX < dotsEndX) {
+      page.drawText(".", {
+        x: dotsX,
+        y: cursorY,
+        size: 11,
+        font: fonts.regular,
+        color: ruleColor,
+      });
+      dotsX += dotAdvance;
+    }
+
+    cursorY -= 18;
+  });
+}
+
+function drawCoverText(
+  page: PDFPage,
+  text: string,
+  options: {
+    fonts: PdfFontSet;
+    cursorY: number;
+    size: number;
+    font: keyof PdfFontSet;
+    color: RGB;
+    gapAfter: number;
+  }
+): number {
+  const lines = wrapLineToWidth(text, options.fonts[options.font], options.size, contentWidth);
+  const lineHeight = options.size * 1.4;
+  let cursorY = options.cursorY;
+
+  lines.forEach(line => {
+    page.drawText(line, {
+      x: marginX,
+      y: cursorY,
+      size: options.size,
+      font: options.fonts[options.font],
+      color: options.color,
+    });
+    cursorY -= lineHeight;
+  });
+
+  return cursorY - options.gapAfter;
+}
+
+function stampFooters(pdfDoc: PDFDocument, fonts: PdfFontSet): void {
+  const pages = pdfDoc.getPages();
+  const total = pages.length;
+
+  pages.forEach((page, index) => {
+    if (index === 0) {
+      return;
+    }
+
+    const pageLabel = `Page ${index + 1} of ${total}`;
+    const pageLabelWidth = fonts.regular.widthOfTextAtSize(pageLabel, footerFontSize);
+
+    page.drawLine({
+      start: { x: marginX, y: footerRuleY },
+      end: { x: page.getWidth() - marginX, y: footerRuleY },
+      thickness: 1,
+      color: ruleColor,
+    });
+    page.drawText("Quantum Safe Cryptography Report", {
+      x: marginX,
+      y: footerRuleY - 14,
+      size: footerFontSize,
+      font: fonts.regular,
+      color: reportColors.muted,
+    });
+    page.drawText(pageLabel, {
+      x: page.getWidth() - marginX - pageLabelWidth,
+      y: footerRuleY - 14,
+      size: footerFontSize,
+      font: fonts.regular,
+      color: reportColors.muted,
     });
   });
 }
@@ -197,75 +405,4 @@ async function embedLogo(pdfDoc: PDFDocument, rawLogoData: string | null) {
   } catch {
     return null;
   }
-}
-
-function addSection(pdfDoc: PDFDocument, heading: string, text: string, fonts: PdfFonts): void {
-  const page = pdfDoc.addPage(pageSize);
-  page.drawText(heading, {
-    x: margin,
-    y: page.getHeight() - margin,
-    size: 18,
-    font: fonts.bold,
-    color: rgb(0, 0, 0),
-  });
-
-  drawWrappedText(pdfDoc, page, text, margin, page.getHeight() - 80, 500, bodyFontSize, fonts.regular);
-}
-
-function drawWrappedText(
-  pdfDoc: PDFDocument,
-  startPage: PDFPage,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  fontSize: number,
-  font: PDFFont
-): void {
-  const lines = wrapText(text, maxWidth, font, fontSize);
-  const lineHeight = fontSize * 1.35;
-  let page = startPage;
-  let cursorY = y;
-
-  lines.forEach(line => {
-    if (cursorY < margin) {
-      page = pdfDoc.addPage(pageSize);
-      cursorY = page.getHeight() - margin;
-    }
-
-    page.drawText(line, {
-      x,
-      y: cursorY,
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 0),
-    });
-    cursorY -= lineHeight;
-  });
-}
-
-function wrapText(text: string, maxWidth: number, font: PDFFont, fontSize: number): string[] {
-  const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
-
-  if (words.length === 0) {
-    return [""];
-  }
-
-  const lines: string[] = [];
-  let currentLine = words[0];
-
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i];
-    const width = font.widthOfTextAtSize(`${currentLine} ${word}`, fontSize);
-
-    if (width < maxWidth) {
-      currentLine += ` ${word}`;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-    }
-  }
-
-  lines.push(currentLine);
-  return lines;
 }

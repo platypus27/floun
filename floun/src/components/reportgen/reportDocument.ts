@@ -1,12 +1,43 @@
 import { AnalysisFinding, FindingSeverity } from "../analysisFinding";
 import {
-  pdfFindingSerializer,
+  omittedEvidenceNotice,
   promptFindingSerializer,
 } from "./findingSerializers";
 
 export type FindingGroups = Record<string, AnalysisFinding[]>;
 
 export type FindingGroupLabels = Record<string, string>;
+
+export interface FindingDisplayField {
+  label: string;
+  value: string;
+}
+
+export interface FindingDisplay {
+  title: string;
+  severity: FindingSeverity;
+  location?: string;
+  confidence?: string;
+  fields: FindingDisplayField[];
+  extras: FindingDisplayField[];
+}
+
+export interface AppendixEntry {
+  title: string;
+  extras: FindingDisplayField[];
+}
+
+export interface AppendixGroup {
+  heading: string;
+  entries: AppendixEntry[];
+}
+
+export interface StatusCounts {
+  vulnerable: number;
+  review: number;
+  safe: number;
+  informational: number;
+}
 
 export interface ReportSections {
   introduction: string;
@@ -19,7 +50,9 @@ export interface ReportSections {
 }
 
 export interface ReportContent extends ReportSections {
-  appendix: string;
+  appendix: AppendixGroup[];
+  findingDisplays: FindingDisplay[];
+  statusCounts: StatusCounts;
   reviewMethodsCount: number;
   reviewMethodsBreakdown: string;
   vulnerableMethodsCount: number;
@@ -42,8 +75,12 @@ export function reportSectionPrompts(findingsText: string): Record<keyof ReportS
 
 export function sanitizeReportText(text: string): string {
   return text
-    .replace(/[^\u0020-\u007E]/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[^\u0020-\u007E\n]/g, " ")
+    .split("\n")
+    .map(line => line.replace(/[ \t]+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -63,7 +100,9 @@ export function countFindingsBySeverity(
 }
 
 export function buildPromptFindingsText(groups: FindingGroups): string {
-  return promptFindingSerializer.serializeFindings(flattenFindingGroups(groups));
+  return flattenFindingGroups(groups)
+    .map(finding => promptFindingSerializer.serializeFinding(finding))
+    .join("\n\n");
 }
 
 export function fallbackSections(
@@ -83,7 +122,7 @@ export function fallbackSections(
   return {
     introduction: "This report summarizes browser-extension scan results for quantum-safe web cryptography readiness.",
     executiveSummary: `${vulnerabilityLine}${reviewLine} Findings were redacted before report generation to avoid exposing sensitive values.`,
-    vulnerabilityAnalysis: findingsText,
+    vulnerabilityAnalysis: "The findings index and blocks below list every signal the scan produced. Raw scanner detail, token checks, and references are collected in the Appendices.",
     riskAssessment: "Review findings indicate migration-planning signals, while deprecated algorithms indicate higher-priority remediation risk.",
     recommendations: "Prioritize TLS modernization, remove legacy cryptographic primitives, and plan migration toward standardized post-quantum algorithms.",
     nextStep: "Validate findings with infrastructure owners, confirm supported cipher suites, and create a staged remediation plan.",
@@ -106,11 +145,57 @@ export function buildReportContent(
     recommendations: sanitizeReportText(sections.recommendations),
     nextStep: sanitizeReportText(sections.nextStep),
     conclusion: sanitizeReportText(sections.conclusion),
-    appendix: buildAppendix(groups),
+    appendix: buildAppendix(groups, groupLabels),
+    findingDisplays: flattenFindingGroups(groups).map(buildFindingDisplay),
+    statusCounts: buildStatusCounts(allFindings),
     reviewMethodsCount: countFindingsBySeverity(allFindings, "Review"),
     reviewMethodsBreakdown: buildSeverityBreakdown(groups, "Review", groupLabels),
     vulnerableMethodsCount: countVulnerableFindings(allFindings),
     vulnerableMethodsBreakdown: buildSeverityBreakdown(groups, "Vulnerable", groupLabels),
+  };
+}
+
+export function buildStatusCounts(findings: AnalysisFinding[]): StatusCounts {
+  return {
+    vulnerable: countFindingsBySeverity(findings, "Vulnerable"),
+    review: countFindingsBySeverity(findings, "Review"),
+    safe: countFindingsBySeverity(findings, "Safe"),
+    informational: countFindingsBySeverity(findings, "Info"),
+  };
+}
+
+function displayField(label: string, value: string | undefined): FindingDisplayField | null {
+  const sanitized = sanitizeReportText(value || "");
+
+  return sanitized ? { label, value: sanitized } : null;
+}
+
+function buildFindingDisplay(finding: AnalysisFinding): FindingDisplay {
+  const fields = [
+    displayField("Standard status", finding.standardStatus),
+    displayField("Rationale", finding.rationale),
+    displayField("Limitations", finding.limitations),
+    displayField("Recommendation", finding.recommendation),
+    { label: "Evidence", value: omittedEvidenceNotice },
+  ].filter((field): field is FindingDisplayField => field !== null);
+
+  const extras = [
+    displayField("Rule ID", finding.ruleId),
+    displayField("Details", finding.details),
+    displayField(
+      "References",
+      finding.references?.length ? finding.references.join(", ") : undefined
+    ),
+    displayField("Updated", finding.updatedAt),
+  ].filter((field): field is FindingDisplayField => field !== null);
+
+  return {
+    title: sanitizeReportText(finding.title) || "Untitled finding",
+    severity: finding.severity,
+    location: finding.location ? sanitizeReportText(finding.location) : undefined,
+    confidence: finding.confidence,
+    fields,
+    extras,
   };
 }
 
@@ -127,8 +212,19 @@ function buildSeverityBreakdown(
     .join(", ");
 }
 
-function buildAppendix(groups: FindingGroups): string {
+function buildAppendix(groups: FindingGroups, groupLabels: FindingGroupLabels): AppendixGroup[] {
   return Object.entries(groups)
-    .map(([group, findings]) => `${group} Results:\n${pdfFindingSerializer.serializeFindings(findings)}`)
-    .join("\n\n");
+    .map(([group, findings]) => {
+      const label = groupLabels[group] || group;
+      const entries = findings
+        .map(finding => {
+          const display = buildFindingDisplay(finding);
+
+          return { title: display.title, extras: display.extras };
+        })
+        .filter(entry => entry.extras.length > 0);
+
+      return { heading: `${label} Results:`, entries };
+    })
+    .filter(group => group.entries.length > 0);
 }

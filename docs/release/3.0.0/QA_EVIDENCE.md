@@ -1,26 +1,26 @@
 # Floun 3.0.0 QA Evidence
 
-Status: release candidate verified locally on Linux on 2026-07-20. The candidate is ready for Chrome Web Store submission, but has not been tagged, uploaded, or published.
+Status: release candidate verified locally on Linux on 2026-07-20; artifact evidence and the local fixture Chrome QA were re-verified on 2026-11-22 after the round-2 and round-3 PDF report layout changes. The candidate is ready for Chrome Web Store submission, but has not been tagged, uploaded, or published.
 
 ## Artifact Evidence
 
 - Package path: `floun/release/floun-3.0.0.zip`
 - Alias package path: `floun/release/floun-3.0.zip`
 - Extension version: `3.0.0`
-- SHA-256: `b7ecc66842c7917be17053e3a39ffd8d1ccc353221f5fccdc62147e9892d8e0c`
-- Alias SHA-256: `b7ecc66842c7917be17053e3a39ffd8d1ccc353221f5fccdc62147e9892d8e0c`
-- Size bytes: `377488`
-- Two independent deterministic packaging runs produced matching SHA-256: `b7ecc66842c7917be17053e3a39ffd8d1ccc353221f5fccdc62147e9892d8e0c`
+- SHA-256: `f50593dd8683981ff0522f8fa994182c7f62ce52766fcd1071a72c0c346a693d`
+- Alias SHA-256: `f50593dd8683981ff0522f8fa994182c7f62ce52766fcd1071a72c0c346a693d`
+- Size bytes: `380762`
+- Two independent deterministic packaging runs produced matching SHA-256: `f50593dd8683981ff0522f8fa994182c7f62ce52766fcd1071a72c0c346a693d`
 
 Required archive entries:
 
 - `LICENSE.txt`
 - `NOTICE.txt`
 - `THIRD_PARTY_NOTICES.txt`
-- `assets/ai-handler-Ca3bMDfZ.js`
-- `assets/index-CVqDfWR5.js`
+- `assets/ai-handler-D0b-hGvz.js`
 - `assets/index-VW9Q_lNK.css`
-- `assets/pdfService-DU9_WLnT.js`
+- `assets/index-EgXUwZFr.js`
+- `assets/pdfService-BNpT2CLL.js`
 - `assets/reportDraftingSettings-CXA6zaou.js`
 - `background.js`
 - `icons/favicon.ico`
@@ -39,7 +39,7 @@ The artifact gate verifies the Apache-2.0 license, Kryv Labs notice, generated p
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Teal dependency install | Pass | Installed published `@kryv/teal@1.2.0`; the production dependency audit reported zero vulnerabilities. |
-| `npm run release:check` | Pass | 34 test files and 138 tests passed; lint, production build, production dependency audit, typecheck, and worker syntax check passed. |
+| `npm run release:check` | Pass | 36 test files and 162 tests passed; lint, production build, production dependency audit, typecheck, and worker syntax check passed. |
 | `npm run release:artifact` | Pass | Canonical and alias archives matched the recorded version, entries, size, and SHA-256. |
 | `npm run release:determinism` | Pass | Two clean package runs were byte-identical. |
 | `npm run store:check` | Pass | Required store documents and 128x128, 1280x800, and 440x280 PNG assets passed. |
@@ -62,6 +62,10 @@ These rows are backed by the Chrome DevTools Protocol QA run against the unpacke
 | Configure and clear DeepSeek BYOK with explicit consent | Pass | Saved the fake key only after consent, reopened the Teal dialog with masked status, sent seven redacted authenticated requests to the intercepted endpoint, generated a leak-free PDF, and removed the key through the UI. |
 | Store package built without AI key | Pass | Artifact secret scanning found no DeepSeek-style key, environment file, or build-time AI secret. |
 | Inspect v3 wordmark, animation, dialog, and narrow layout | Pass | Production screenshots confirmed the lowercase teal `floun` wordmark, 400 px layout, status cards, warning alert, centered AI dialog, masked key card, and button alignment without horizontal overflow or clipping. |
+
+## Round 2-3 Refresh (2026-11-22)
+
+After the PDF report layout changes (finding blocks, summary tables, slim appendices in round 2; padded index cells, crisp 512 px cover logo, shared grid geometry, and muted Not rated cells in round 3), the artifact evidence above was regenerated and the local-fixture Chrome QA was re-run against each new production build. Chrome 157.0.8103.78 loaded Floun 3.0.0 as an unpacked MV3 extension, scanned `http://127.0.0.1:4174/crypto-readiness.html` with 20 detected signals across all four Teal result accordions (TLS and certificate lookups explicitly unavailable for the loopback host), and exported a 105,740-byte, 10-page PDF report in which none of the five raw fixture token values appeared. Every page image of that PDF was visually inspected for overlap, orphans, clipping, and uneven spacing, and the cover logo was checked at 200% zoom. The external HTTPS, HTTP, and BYOK rows above remain from the 2026-07-20 verification.
 
 ## Publication Boundary
 
