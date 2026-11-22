@@ -2,10 +2,12 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import {
   bodyFontSize,
   contentWidth,
+  findingIndexColumns,
   layoutReport,
   marginBottom,
   marginX,
   pageSize,
+  tableCellPadding,
   wrapLineToWidth,
   type PdfFontSet,
   type SectionPlan,
@@ -215,6 +217,89 @@ describe("layoutReport", () => {
     );
 
     expect(headerPages.size).toBeGreaterThanOrEqual(2);
+  });
+
+  test("keeps every table cell line inside its column minus padding", async () => {
+    const fonts = await createFonts();
+    const layout = layoutReport(fonts, [
+      {
+        heading: "1. Analysis", type: "analysis",
+        intro: "",
+        counts: { vulnerable: 1, review: 1, safe: 0, informational: 0 },
+        findings: [
+          {
+            title: "A very long finding title that definitely wraps across multiple index cell lines",
+            severity: "Vulnerable",
+            location: `https://example.com/assets/a-rather-long-path/that/wraps?cachebust=${"abc123".repeat(8)}`,
+            confidence: "High",
+            fields: [{ label: "Rationale", value: "Rationale one." }],
+          },
+          {
+            title: "Short",
+            severity: "Review",
+            location: "inline script (inline)",
+            confidence: "",
+            fields: [{ label: "Rationale", value: "Rationale two." }],
+          },
+        ],
+      },
+    ]);
+
+    const columnStarts: number[] = [];
+    let columnX = marginX;
+    findingIndexColumns.forEach(column => {
+      columnStarts.push(columnX);
+      columnX += column.width;
+    });
+
+    const tableLines = layout.lines.filter(line => (
+      (line.kind === "tableCell" || line.kind === "tableHeader") &&
+      columnStarts.some(start => line.x === start + tableCellPadding)
+    ));
+    expect(tableLines.length).toBeGreaterThan(0);
+
+    tableLines.forEach(line => {
+      const columnIndex = columnStarts.findIndex(start => line.x === start + tableCellPadding);
+
+      expect(columnIndex).toBeGreaterThanOrEqual(0);
+      expect(line.x + line.width).toBeLessThanOrEqual(
+        columnStarts[columnIndex] + findingIndexColumns[columnIndex].width - tableCellPadding
+      );
+    });
+  });
+
+  test("renders Not rated in muted text for findings without a confidence", async () => {
+    const fonts = await createFonts();
+    const layout = layoutReport(fonts, [
+      {
+        heading: "1. Analysis", type: "analysis",
+        intro: "",
+        counts: { vulnerable: 0, review: 1, safe: 0, informational: 1 },
+        findings: [
+          {
+            title: "Rated finding",
+            severity: "Review",
+            location: "inline script (inline)",
+            confidence: "Medium",
+            fields: [],
+          },
+          {
+            title: "Unrated finding",
+            severity: "Info",
+            location: "SSL Header",
+            confidence: "",
+            fields: [],
+          },
+        ],
+      },
+    ]);
+
+    const notRated = layout.lines.find(line => line.kind === "tableCell" && line.text === "Not rated");
+    expect(notRated).toBeDefined();
+    expect(notRated?.color).toBe("muted");
+
+    const rated = layout.lines.find(line => line.kind === "tableCell" && line.text === "Medium");
+    expect(rated?.color).toBe("body");
   });
 
   test("keeps a finding title with at least its first three grid rows", async () => {

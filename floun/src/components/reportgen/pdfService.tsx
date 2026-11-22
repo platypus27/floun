@@ -31,7 +31,7 @@ interface ChromeRuntimeAssetApi {
   };
 }
 
-const defaultReportLogoAssetPath = "icons/icon_128.png";
+const defaultReportLogoAssetPath = "icons/floun.png";
 
 const reportColors: Record<LineColor, RGB> = {
   primary: rgb(15 / 255, 106 / 255, 108 / 255),

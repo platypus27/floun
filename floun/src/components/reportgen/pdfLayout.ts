@@ -146,7 +146,7 @@ const severityMeta: Record<string, { color: LineColor; pillFill: RectFill }> = {
 
 const tableFontSize = 9.5;
 const tableLineHeight = 12.5;
-const tableCellPadding = 4;
+export const tableCellPadding = 4;
 const smallLineFactor = 1.35;
 
 const findingTitleSize = 11.5;
@@ -157,6 +157,13 @@ const pillTextSize = 8;
 const blockRuleGap = 6;
 
 const preferredBreakCharacters = new Set(["/", "-", ".", "?", "&", "=", "_", "+", ":", "#", "%", "~"]);
+
+export const findingIndexColumns: TableColumn[] = [
+  { header: "Title", width: 186 },
+  { header: "Status", width: 70 },
+  { header: "Location", width: 150 },
+  { header: "Confidence", width: 94 },
+];
 
 function findPreferredBreak(chunk: string, minimumIndex: number): number {
   for (let index = chunk.length - 1; index >= minimumIndex; index -= 1) {
@@ -436,7 +443,8 @@ function layoutSubHeading(state: LayoutState, fonts: PdfFontSet, text: string): 
 }
 
 function wrapCell(text: string, font: PDFFont, width: number): string[] {
-  return wrapLineToWidth(text, font, tableFontSize, Math.max(width, tableFontSize * 2));
+  const innerWidth = width - tableCellPadding * 2;
+  return wrapLineToWidth(text, font, tableFontSize, Math.max(innerWidth, tableFontSize * 2));
 }
 
 function layoutTable(
@@ -716,23 +724,26 @@ function layoutAnalysisSection(state: LayoutState, fonts: PdfFontSet, plan: Extr
     return;
   }
 
-  const indexColumns: TableColumn[] = [
-    { header: "Title", width: 150 },
-    { header: "Status", width: 72 },
-    { header: "Location", width: 184 },
-    { header: "Confidence", width: 94 },
-  ];
+  const indexColumns: TableColumn[] = findingIndexColumns;
   const indexRows = plan.findings.map(finding => [
     finding.title,
     finding.severity,
     finding.location || "",
-    finding.confidence || "",
+    finding.confidence || "Not rated",
   ]);
   layoutTable(state, fonts, indexColumns, indexRows, {
     zebra: true,
-    cellColor: (rowIndex, columnIndex) => (
-      columnIndex === 1 ? severityMeta[plan.findings[rowIndex].severity]?.color || "body" : "body"
-    ),
+    cellColor: (rowIndex, columnIndex) => {
+      if (columnIndex === 1) {
+        return severityMeta[plan.findings[rowIndex].severity]?.color || "body";
+      }
+
+      if (columnIndex === 3 && !plan.findings[rowIndex].confidence) {
+        return "muted";
+      }
+
+      return "body";
+    },
   });
 
   plan.findings.forEach((finding, index) => {
@@ -765,7 +776,7 @@ function layoutAppendixSection(state: LayoutState, fonts: PdfFontSet, plan: Extr
       });
       state.cursorY -= entryTitleLineHeight + 2;
 
-      layoutFieldGrid(state, fonts, entry.extras, 90, 10);
+      layoutFieldGrid(state, fonts, entry.extras, findingGridLabelWidth, findingGridIndent);
       state.cursorY -= 6;
     });
   });

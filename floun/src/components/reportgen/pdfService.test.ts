@@ -74,7 +74,7 @@ test("resolveReportAssetUrl falls back to the relative asset path outside Chrome
   expect(resolveReportAssetUrl("icons/floun.png", undefined)).toBe("icons/floun.png");
 });
 
-test("resolveDefaultReportLogoAssetUrl uses the packaged PNG icon", () => {
+test("resolveDefaultReportLogoAssetUrl uses the packaged high-resolution PNG icon", () => {
   const chromeApi = {
     runtime: {
       getURL: (assetPath: string) => `chrome-extension://floun/${assetPath}`,
@@ -82,7 +82,7 @@ test("resolveDefaultReportLogoAssetUrl uses the packaged PNG icon", () => {
   };
 
   expect(resolveDefaultReportLogoAssetUrl(chromeApi)).toBe(
-    "chrome-extension://floun/icons/icon_128.png"
+    "chrome-extension://floun/icons/floun.png"
   );
 });
 
