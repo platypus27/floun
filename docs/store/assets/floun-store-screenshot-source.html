@@ -8,67 +8,49 @@
       * { box-sizing: border-box; }
       html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
       body {
-        background: #f8f7f2 url("./floun-store-background.png") center / cover no-repeat;
+        background: linear-gradient(135deg, #fbf6ea 0%, #f3ead5 100%);
         color: #123f47;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: "Noto Sans", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
       }
       main {
         display: grid;
-        grid-template-columns: 470px 1fr;
-        gap: 54px;
+        grid-template-columns: 1fr 432px;
+        gap: 96px;
         height: 100%;
-        padding: 78px 74px;
+        padding: 84px 96px 84px 72px;
       }
-      .copy { align-self: center; }
-      .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 38px; }
-      .brand img { width: 56px; height: 56px; }
-      .brand span { color: #16707a; font-size: 34px; font-weight: 700; letter-spacing: -1px; }
-      .version {
-        display: inline-block;
-        margin-bottom: 20px;
-        border: 1px solid #d7a33d;
-        border-radius: 999px;
-        padding: 7px 13px;
-        background: rgba(255, 255, 255, 0.72);
-        color: #775718;
-        font-size: 14px;
-        font-weight: 700;
-      }
-      h1 { margin: 0; font-size: 48px; line-height: 1.08; letter-spacing: -1.8px; }
-      p { margin: 24px 0 28px; color: #345d63; font-size: 20px; line-height: 1.5; }
-      ul { margin: 0; padding: 0; list-style: none; color: #234f56; font-size: 17px; line-height: 1.7; }
-      li::before { content: "✓"; margin-right: 12px; color: #16707a; font-weight: 800; }
+      .copy { display: flex; flex-direction: column; justify-content: space-between; }
+      .wordmark { margin: 0; color: #0f6a6c; font-size: 88px; font-weight: 800; letter-spacing: -3px; line-height: 1; }
+      h1 { margin: 0; color: #1c3b3d; font-size: 48px; line-height: 1.25; letter-spacing: -0.5px; }
+      h1 span { display: block; color: #0f6a6c; }
+      ul { margin: 0; padding: 0; list-style: none; color: #4d6a6a; font-size: 24px; line-height: 1.9; }
+      .footer { color: #0f6a6c; font-size: 20px; font-weight: 700; }
       .product-frame {
         align-self: center;
-        justify-self: end;
-        width: 610px;
-        height: 590px;
-        overflow: hidden;
-        border: 1px solid rgba(20, 94, 104, 0.28);
-        border-radius: 22px;
-        background: white;
-        box-shadow: 0 30px 70px rgba(17, 72, 80, 0.2), 0 8px 22px rgba(17, 72, 80, 0.13);
+        width: 432px;
+        height: 632px;
+        padding: 16px;
+        border: 1px solid rgba(15, 106, 108, 0.22);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 30px 70px rgba(17, 72, 80, 0.18), 0 8px 22px rgba(17, 72, 80, 0.12);
       }
-      .product-frame img { display: block; width: 610px; height: auto; }
+      .product-frame img { display: block; width: 400px; height: 600px; }
     </style>
   </head>
   <body>
     <main>
       <section class="copy">
-        <div class="brand">
-          <img src="../../../floun/public/icons/icon_128.png" alt="" />
-          <span>floun</span>
-        </div>
-        <div class="version">VERSION 2.1</div>
-        <h1>See your cryptographic footprint clearly.</h1>
-        <p>Scan a page, review migration signals, and export a privacy-safe report.</p>
+        <p class="wordmark">floun</p>
+        <h1>Crypto readiness,<span>clearly mapped.</span></h1>
         <ul>
-          <li>JavaScript, tokens, TLS, and certificates</li>
-          <li>Redacted PDF reports</li>
-          <li>Optional DeepSeek drafting with your API key</li>
+          <li>Scan the current site locally.</li>
+          <li>Understand migration signals.</li>
+          <li>Export a redacted report.</li>
         </ul>
+        <div class="footer">v3 &middot; Built with Teal</div>
       </section>
-      <section class="product-frame" aria-label="Floun scanning Cloudflare">
+      <section class="product-frame" aria-label="Floun scanning a site">
         <img src="./floun-popup-cloudflare.png" alt="Floun scan results" />
       </section>
     </main>
